@@ -146,6 +146,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </ul>
         </nav>
         <div className="p-4 border-t border-gray-200">
+          <Link href="/profile" 
+            className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/profile') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/profile') ? 'text-[#FF5A5F]' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            My Profile
+          </Link>
           <Link href="#" 
             className="flex items-center p-3 text-[#484848] rounded-lg font-medium hover:bg-gray-100"
           >
