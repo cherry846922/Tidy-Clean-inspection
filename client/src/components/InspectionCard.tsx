@@ -12,7 +12,7 @@ interface InspectionCardProps {
 export default function InspectionCard({ inspection, variant = "full" }: InspectionCardProps) {
   const { toast } = useToast();
   
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: Status) => {
     try {
       await apiRequest('PATCH', `/api/inspections/${inspection.id}/status`, { status: newStatus });
       

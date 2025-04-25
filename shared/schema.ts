@@ -121,15 +121,20 @@ export type UpdateInspectionStatus = z.infer<typeof updateInspectionStatusSchema
 
 // Payment related schemas
 export const createPaymentIntentSchema = z.object({
-  inspectionId: z.number().positive(),
-  amount: z.number().positive(),
+  inspectionId: z.number({
+    required_error: "Inspection ID is required",
+    invalid_type_error: "Inspection ID must be a number"
+  }).positive(),
+  amount: z.number({
+    required_error: "Amount is required",
+    invalid_type_error: "Amount must be a number"
+  }).positive(),
 });
 
 export type CreatePaymentIntent = z.infer<typeof createPaymentIntentSchema>;
 
 export const updatePaymentStatusSchema = z.object({
-  inspectionId: z.number().positive(),
-  paymentStatus: z.enum(["unpaid", "processing", "paid"]),
+  paymentStatus: z.enum(["unpaid", "processing", "paid", "failed"]),
   paymentId: z.string().optional(),
 });
 
