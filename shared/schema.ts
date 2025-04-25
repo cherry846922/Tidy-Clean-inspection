@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, primaryKey, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -85,7 +85,7 @@ export const inspections = pgTable("inspections", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const inspectionsRelations = relations(inspections, ({ one }) => ({
+export const inspectionsRelations = relations(inspections, ({ one, many }) => ({
   property: one(properties, {
     fields: [inspections.propertyId],
     references: [properties.id],
@@ -94,6 +94,7 @@ export const inspectionsRelations = relations(inspections, ({ one }) => ({
     fields: [inspections.cleanerId],
     references: [cleaners.id],
   }),
+  addons: many(inspectionAddons),
 }));
 
 export const insertInspectionSchema = createInsertSchema(inspections, {
@@ -108,6 +109,7 @@ export type InsertInspection = z.infer<typeof insertInspectionSchema>;
 export type Inspection = typeof inspections.$inferSelect & {
   property: Property;
   cleaner: Cleaner;
+  addons?: (InspectionAddon & { addon: Addon })[];
 };
 
 // UpdateInspectionStatusSchema
@@ -139,3 +141,53 @@ export const updatePaymentStatusSchema = z.object({
 });
 
 export type UpdatePaymentStatus = z.infer<typeof updatePaymentStatusSchema>;
+
+// Add-ons (items like lightbulbs, batteries that can be added to inspections)
+export const addons = pgTable("addons", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull().default("0"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAddonSchema = createInsertSchema(addons, {
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  price: (schema) => schema.refine(val => parseFloat(val) > 0, {
+    message: "Price must be positive"
+  }),
+});
+
+export type InsertAddon = z.infer<typeof insertAddonSchema>;
+export type Addon = typeof addons.$inferSelect;
+
+// Junction table for inspections and add-ons (many-to-many)
+export const inspectionAddons = pgTable("inspection_addons", {
+  inspectionId: integer("inspection_id").references(() => inspections.id).notNull(),
+  addonId: integer("addon_id").references(() => addons.id).notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.inspectionId, table.addonId] }),
+  };
+});
+
+export const inspectionAddonsRelations = relations(inspectionAddons, ({ one }) => ({
+  inspection: one(inspections, {
+    fields: [inspectionAddons.inspectionId],
+    references: [inspections.id],
+  }),
+  addon: one(addons, {
+    fields: [inspectionAddons.addonId],
+    references: [addons.id],
+  }),
+}));
+
+export const insertInspectionAddonSchema = createInsertSchema(inspectionAddons, {
+  quantity: (schema) => schema.int().positive("Quantity must be positive"),
+});
+
+export type InsertInspectionAddon = z.infer<typeof insertInspectionAddonSchema>;
+export type InspectionAddon = typeof inspectionAddons.$inferSelect;

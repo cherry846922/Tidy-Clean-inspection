@@ -176,6 +176,54 @@ async function seed() {
       }
     }
 
+    // Seed Addons (new)
+    const addons = [
+      {
+        name: "Lightbulb",
+        description: "Replacement lightbulb for any fixture",
+        price: "3.99",
+        isActive: true,
+      },
+      {
+        name: "Batteries (AA)",
+        description: "Pack of 4 AA batteries",
+        price: "5.99",
+        isActive: true,
+      },
+      {
+        name: "Batteries (AAA)",
+        description: "Pack of 4 AAA batteries",
+        price: "5.49",
+        isActive: true,
+      },
+      {
+        name: "Air Freshener",
+        description: "Long-lasting air freshener for any room",
+        price: "7.99",
+        isActive: true,
+      },
+      {
+        name: "HVAC Filter",
+        description: "Standard size HVAC filter replacement",
+        price: "14.99",
+        isActive: true,
+      }
+    ];
+    
+    for (const addon of addons) {
+      // Check if addon already exists
+      const existingAddon = await db.query.addons.findFirst({
+        where: (a, { eq }) => eq(a.name, addon.name)
+      });
+      
+      if (!existingAddon) {
+        await db.insert(schema.addons).values(addon);
+        console.log(`Created addon: ${addon.name}`);
+      } else {
+        console.log(`Addon ${addon.name} already exists, skipping`);
+      }
+    }
+
     console.log("Seeding completed successfully!");
   } catch (error) {
     console.error("Error seeding database:", error);
