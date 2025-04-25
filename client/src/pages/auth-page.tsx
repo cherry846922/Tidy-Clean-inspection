@@ -33,7 +33,12 @@ const loginSchema = z.object({
 });
 
 // Registration form schema
-const registerSchema = insertUserSchema;
+const registerSchema = insertUserSchema.extend({
+  role: z.string().min(1, "Please select a role (host or inspector)"),
+  email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+  name: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+});
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -65,6 +70,10 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
+      role: "",
+      email: "",
+      name: "",
+      phone: "",
     },
   });
 
@@ -174,6 +183,68 @@ export default function AuthPage() {
                             <Input type="password" placeholder="Choose a password" {...field} />
                           </FormControl>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="email" 
+                              placeholder="Your email address" 
+                              value={field.value || ""} 
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>I am a...</FormLabel>
+                          <div className="grid grid-cols-2 gap-3 pt-2">
+                            <Button
+                              type="button"
+                              variant={field.value === "host" ? "default" : "outline"}
+                              className={field.value === "host" ? "border-2 border-primary" : ""}
+                              onClick={() => registerForm.setValue("role", "host")}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                              </svg>
+                              Host
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={field.value === "inspector" ? "default" : "outline"}
+                              className={field.value === "inspector" ? "border-2 border-primary" : ""}
+                              onClick={() => registerForm.setValue("role", "inspector")}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                              </svg>
+                              Inspector
+                            </Button>
+                          </div>
+                          {!field.value && (
+                            <p className="text-sm text-destructive mt-1">Please select a role</p>
+                          )}
                         </FormItem>
                       )}
                     />

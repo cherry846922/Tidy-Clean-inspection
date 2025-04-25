@@ -568,6 +568,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update base rate" });
     }
   });
+  
+  // User profile update
+  app.put(`${apiPrefix}/user/profile`, requireAuth, async (req, res) => {
+    try {
+      const { email, name, phone } = req.body;
+      
+      // Update user profile
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const updatedUser = await storage.updateUser(req.user.id, {
+        email,
+        name,
+        phone
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
+  // Password update
+  app.put(`${apiPrefix}/user/password`, requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current and new passwords are required" });
+      }
+      
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, req.user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user password
+      const updatedUser = await storage.updateUser(req.user.id, {
+        password: hashedPassword
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({ message: "Failed to update password" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
