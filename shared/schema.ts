@@ -3,16 +3,36 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Users (original table)
+// Users table with role-based access
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  role: text("role").notNull().default("host"), // "host" or "inspector"
+  phone: text("phone"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const usersRelations = relations(users, ({ many }) => ({
+  properties: many(properties),
+  inspections: many(inspections),
+}));
+
+export const insertUserSchema = createInsertSchema(users, {
+  username: (schema) => schema.min(3, "Username must be at least 3 characters"),
+  password: (schema) => schema.min(6, "Password must be at least 6 characters"),
+  email: (schema) => schema.email("Must be a valid email"),
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  role: (schema) => schema.refine(val => ["host", "inspector"].includes(val), {
+    message: "Role must be 'host' or 'inspector'"
+  }),
+  phone: (schema) => schema.optional(),
+}).omit({ 
+  isActive: true, 
+  createdAt: true 
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -21,6 +41,7 @@ export type User = typeof users.$inferSelect;
 // Properties
 export const properties = pgTable("properties", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Link to host user
   name: text("name").notNull(),
   address: text("address").notNull(),
   type: text("type").notNull(),
@@ -29,8 +50,12 @@ export const properties = pgTable("properties", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const propertiesRelations = relations(properties, ({ many }) => ({
+export const propertiesRelations = relations(properties, ({ many, one }) => ({
   inspections: many(inspections),
+  user: one(users, {
+    fields: [properties.userId],
+    references: [users.id],
+  }),
 }));
 
 export const insertPropertySchema = createInsertSchema(properties, {
@@ -72,6 +97,7 @@ export const inspections = pgTable("inspections", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").references(() => properties.id).notNull(),
   cleanerId: integer("cleaner_id").references(() => cleaners.id).notNull(),
+  requestedBy: integer("requested_by").references(() => users.id).notNull(), // Host who requested the inspection
   date: timestamp("date").notNull(),
   durationMinutes: integer("duration_minutes").notNull().default(60),
   price: real("price").notNull().default(0),
@@ -94,6 +120,10 @@ export const inspectionsRelations = relations(inspections, ({ one, many }) => ({
     fields: [inspections.cleanerId],
     references: [cleaners.id],
   }),
+  requestingUser: one(users, {
+    fields: [inspections.requestedBy],
+    references: [users.id],
+  }),
   addons: many(inspectionAddons),
 }));
 
@@ -109,6 +139,7 @@ export type InsertInspection = z.infer<typeof insertInspectionSchema>;
 export type Inspection = typeof inspections.$inferSelect & {
   property: Property;
   cleaner: Cleaner;
+  requestingUser?: User;
   addons?: (InspectionAddon & { addon: Addon })[];
 };
 
