@@ -264,6 +264,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update inspection status" });
     }
   });
+  
+  // Update inspection details
+  app.patch(`${apiPrefix}/inspections/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid inspection ID" });
+      }
+
+      // Allow partial updates to various fields
+      const updatedInspection = await storage.updateInspection(id, req.body);
+      if (!updatedInspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      
+      res.json(updatedInspection);
+    } catch (error) {
+      console.error("Error updating inspection:", error);
+      res.status(500).json({ message: "Failed to update inspection" });
+    }
+  });
 
   // PAYMENT ROUTES
   app.post(`${apiPrefix}/create-payment-intent`, async (req, res) => {

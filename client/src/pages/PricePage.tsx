@@ -208,7 +208,8 @@ export default function PricePage() {
                   <CardTitle>Inspection Price</CardTitle>
                   <CardDescription>{inspection.property.name} - {formatDate(inspection.date)}</CardDescription>
                 </div>
-                <Badge variant={inspection.status === 'completed' ? "success" : "default"}>
+                <Badge variant={inspection.status === 'completed' ? "secondary" : "default"} 
+                       className={inspection.status === 'completed' ? "bg-green-500 hover:bg-green-600 text-white" : ""}>
                   {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
                 </Badge>
               </div>

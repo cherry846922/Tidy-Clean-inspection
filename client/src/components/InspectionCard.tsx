@@ -166,6 +166,17 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
             Pay Now
           </Button>
         )}
+        
+        {(!inspection.price || inspection.price === 0) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-blue-600 border-blue-600 text-xs ml-auto"
+            onClick={() => navigate(`/price/${inspection.id}`)}
+          >
+            Set Price & Add-ons
+          </Button>
+        )}
       </div>
       
       {inspection.notes && (
