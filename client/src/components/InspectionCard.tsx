@@ -1,5 +1,5 @@
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { formatDate, getStatusClass } from "@/lib/utils";
+import { formatDate, getStatusClass, type Status, type PaymentStatus } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Inspection } from "@shared/schema";

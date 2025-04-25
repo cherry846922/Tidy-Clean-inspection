@@ -228,5 +228,24 @@ export const storage = {
       .returning();
     
     return this.getInspectionById(updatedInspection.id);
+  },
+  
+  // Payment status operations
+  async updatePaymentStatus(id: number, update: { paymentStatus: string; paymentId?: string }) {
+    const updateValues: Record<string, unknown> = {
+      paymentStatus: update.paymentStatus,
+      updatedAt: new Date()
+    };
+    
+    if (update.paymentId) {
+      updateValues.paymentId = update.paymentId;
+    }
+    
+    const [updatedInspection] = await db.update(schema.inspections)
+      .set(updateValues)
+      .where(eq(schema.inspections.id, id))
+      .returning();
+    
+    return this.getInspectionById(updatedInspection.id);
   }
 };

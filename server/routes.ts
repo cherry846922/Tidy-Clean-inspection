@@ -4,6 +4,14 @@ import { storage } from "./storage";
 import * as schema from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16" as any, // Cast to any to avoid type issues with different Stripe versions
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
@@ -240,6 +248,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating inspection status:", error);
       res.status(500).json({ message: "Failed to update inspection status" });
+    }
+  });
+
+  // PAYMENT ROUTES
+  app.post(`${apiPrefix}/create-payment-intent`, async (req, res) => {
+    try {
+      const validatedData = schema.createPaymentIntentSchema.parse(req.body);
+      const { inspectionId, amount } = validatedData;
+
+      // Get the inspection to ensure it exists and is unpaid
+      const inspection = await storage.getInspectionById(inspectionId);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+
+      if (inspection.paymentStatus === 'paid') {
+        return res.status(400).json({ message: "This inspection has already been paid for" });
+      }
+
+      // Create a payment intent with Stripe
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          inspectionId: inspection.id.toString(),
+          propertyName: inspection.property.name,
+          date: inspection.date.toString()
+        }
+      });
+
+      // Update the inspection with payment processing status
+      await storage.updatePaymentStatus(inspectionId, {
+        paymentStatus: 'processing',
+        paymentId: paymentIntent.id
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        inspectionId
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
+    }
+  });
+
+  app.post(`${apiPrefix}/payment-webhook`, async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+    
+    // Webhook secret should be configured in production
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    try {
+      if (webhookSecret && sig) {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      } else {
+        // For development without signature verification
+        event = req.body;
+      }
+      
+      // Handle the event
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const inspectionId = parseInt(paymentIntent.metadata.inspectionId);
+        
+        // Update inspection payment status to paid
+        await storage.updatePaymentStatus(inspectionId, {
+          paymentStatus: 'paid',
+          paymentId: paymentIntent.id
+        });
+        
+        console.log(`Payment for inspection ${inspectionId} succeeded!`);
+      }
+      
+      res.json({ received: true });
+    } catch (err) {
+      console.error('Webhook Error:', err);
+      res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   });
 

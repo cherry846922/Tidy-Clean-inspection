@@ -6,6 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export type Status = "scheduled" | "completed" | "cancelled";
+export type PaymentStatus = "unpaid" | "processing" | "paid" | "failed";
 
 export function formatTime(time: string): string {
   // Convert "13:00:00" to "1:00 PM"
