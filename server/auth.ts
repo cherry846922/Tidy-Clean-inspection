@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -64,10 +64,6 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Incorrect username or password" });
         }
 
-        if (!user.isActive) {
-          return done(null, false, { message: "Account is not active" });
-        }
-
         return done(null, user);
       } catch (error) {
         return done(error);
@@ -104,15 +100,6 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      // Check if email already exists
-      const existingEmail = await db.query.users.findFirst({
-        where: eq(schema.users.email, req.body.email),
-      });
-
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
       // Validate user data
       const userData = schema.insertUserSchema.parse({
         ...req.body,
@@ -136,7 +123,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error, user: Express.User, info: { message: string }) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: info?.message || "Authentication failed" });
 
@@ -162,23 +149,12 @@ export function setupAuth(app: Express) {
   });
 
   // Middleware to check if user is authenticated
-  app.use("/api/host", (req, res, next) => {
+  const requireAuth = (req: Request, res: any, next: any) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    if (req.user.role !== "host") {
-      return res.status(403).json({ message: "Host access required" });
-    }
     next();
-  });
+  };
 
-  app.use("/api/inspector", (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    if (req.user.role !== "inspector") {
-      return res.status(403).json({ message: "Inspector access required" });
-    }
-    next();
-  });
+  return { requireAuth };
 }

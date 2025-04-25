@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,32 +8,52 @@ import Inspections from "@/pages/Inspections";
 import Properties from "@/pages/Properties";
 import PricePage from "@/pages/PricePage";
 import Checkout from "@/pages/Checkout";
+import AuthPage from "@/pages/auth-page";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
+  const [location] = useLocation();
+  const isAuthPage = location === '/auth';
+  
   return (
     <Switch>
-      <Route path="/" component={Calendar} />
-      <Route path="/inspections" component={Inspections} />
-      <Route path="/properties" component={Properties} />
-      <Route path="/price/:id" component={PricePage} />
-      <Route path="/checkout/:id" component={Checkout} />
+      <ProtectedRoute path="/" component={Calendar} />
+      <ProtectedRoute path="/inspections" component={Inspections} />
+      <ProtectedRoute path="/properties" component={Properties} />
+      <ProtectedRoute path="/price/:id" component={PricePage} />
+      <ProtectedRoute path="/checkout/:id" component={Checkout} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [location] = useLocation();
+  const { user } = useAuth();
+  
+  // Don't show sidebar/header on auth page
+  const isAuthPage = location === '/auth';
+  
+  if (isAuthPage) {
+    return (
+      <main className="flex-1">
+        <Router />
+      </main>
+    );
+  }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="flex flex-col md:flex-row min-h-screen">
-        <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-        
-        {/* Mobile Header */}
+    <div className="flex flex-col md:flex-row min-h-screen">
+      {user && <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />}
+      
+      {/* Mobile Header - only if logged in */}
+      {user && (
         <div className="md:hidden bg-white p-4 shadow-md flex justify-between items-center">
           <h1 className="text-xl font-bold text-[#FF5A5F] flex items-center">
             <i className="fas fa-broom mr-2"></i> CleanBnB
@@ -47,14 +67,24 @@ function App() {
             </svg>
           </button>
         </div>
-        
-        <main className="flex-1">
-          <Router />
-        </main>
-        
-        <MobileNav />
-      </div>
-      <Toaster />
+      )}
+      
+      <main className="flex-1">
+        <Router />
+      </main>
+      
+      {user && <MobileNav />}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppContent />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
