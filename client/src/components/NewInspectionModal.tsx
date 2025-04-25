@@ -25,6 +25,7 @@ const formSchema = z.object({
   time: z.string().min(1, "Time is required"),
   cleanerId: z.string().min(1, "Cleaner is required"),
   durationMinutes: z.string().min(1, "Duration is required"),
+  price: z.string().min(1, "Price is required"),
   notes: z.string().optional(),
 });
 
@@ -64,6 +65,7 @@ export default function NewInspectionModal({ isOpen, onClose, selectedDate }: Ne
       time: "",
       cleanerId: "",
       durationMinutes: "60", // Default 1 hour
+      price: "75", // Default price $75
       notes: "",
     },
   });
@@ -84,6 +86,8 @@ export default function NewInspectionModal({ isOpen, onClose, selectedDate }: Ne
         cleanerId: parseInt(values.cleanerId),
         date: dateTime.toISOString(),
         durationMinutes: parseInt(values.durationMinutes),
+        price: parseFloat(values.price),
+        paymentStatus: "unpaid",
         notes: values.notes || null,
         status: "scheduled"
       };
@@ -214,32 +218,62 @@ export default function NewInspectionModal({ isOpen, onClose, selectedDate }: Ne
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="durationMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="durationMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Auto-calculate price based on duration
+                          const basePrice = 50;
+                          const hourlyRate = 25;
+                          const hours = parseInt(value) / 60;
+                          const calculatedPrice = basePrice + (hourlyRate * hours);
+                          form.setValue("price", calculatedPrice.toString());
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="90">1.5 hours</SelectItem>
+                          <SelectItem value="120">2 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price ($)</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
-                        </SelectTrigger>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          step="0.01" 
+                          placeholder="75.00"
+                          {...field} 
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="30">30 minutes</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="90">1.5 hours</SelectItem>
-                        <SelectItem value="120">2 hours</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={form.control}

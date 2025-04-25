@@ -74,6 +74,9 @@ export const inspections = pgTable("inspections", {
   cleanerId: integer("cleaner_id").references(() => cleaners.id).notNull(),
   date: timestamp("date").notNull(),
   durationMinutes: integer("duration_minutes").notNull().default(60),
+  price: real("price").notNull().default(0),
+  paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, processing, paid
+  paymentId: text("payment_id"), // Stripe payment intent ID
   status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled
   notes: text("notes"),
   issues: text("issues"),
@@ -115,3 +118,19 @@ export const updateInspectionStatusSchema = z.object({
 });
 
 export type UpdateInspectionStatus = z.infer<typeof updateInspectionStatusSchema>;
+
+// Payment related schemas
+export const createPaymentIntentSchema = z.object({
+  inspectionId: z.number().positive(),
+  amount: z.number().positive(),
+});
+
+export type CreatePaymentIntent = z.infer<typeof createPaymentIntentSchema>;
+
+export const updatePaymentStatusSchema = z.object({
+  inspectionId: z.number().positive(),
+  paymentStatus: z.enum(["unpaid", "processing", "paid"]),
+  paymentId: z.string().optional(),
+});
+
+export type UpdatePaymentStatus = z.infer<typeof updatePaymentStatusSchema>;

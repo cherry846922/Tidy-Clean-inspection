@@ -109,8 +109,15 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
           <h3 className="font-medium text-[#484848]">{inspection.property.name}</h3>
           <p className="text-[#767676] text-sm mt-1">{formatDate(inspection.date)}, {inspectionTime}</p>
         </div>
-        <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
-          {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
+        <div className="flex flex-col items-end space-y-2">
+          <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
+            {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
+          </div>
+          {inspection.price > 0 && (
+            <div className="text-[#484848] font-medium text-sm">
+              ${inspection.price.toFixed(2)}
+            </div>
+          )}
         </div>
       </div>
       
@@ -127,6 +134,31 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         {inspection.property.address}
+      </div>
+      
+      <div className="mt-2 flex items-center text-sm justify-between">
+        {inspection.paymentStatus && (
+          <div className={`
+            ${inspection.paymentStatus === 'paid' ? 'text-green-600' : 
+              inspection.paymentStatus === 'processing' ? 'text-blue-600' : 'text-amber-600'}
+            font-medium
+          `}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            {inspection.paymentStatus.charAt(0).toUpperCase() + inspection.paymentStatus.slice(1)}
+          </div>
+        )}
+        
+        {inspection.price > 0 && inspection.paymentStatus === 'unpaid' && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-[#FF5A5F] border-[#FF5A5F] text-xs ml-auto"
+          >
+            Pay Now
+          </Button>
+        )}
       </div>
       
       {inspection.notes && (
