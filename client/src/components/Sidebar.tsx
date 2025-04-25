@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,7 +8,11 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
-
+  const { user } = useAuth();
+  
+  const isInspector = user?.role === "inspector";
+  const isHost = user?.role === "host";
+  
   const isActive = (path: string) => location === path;
 
   return (

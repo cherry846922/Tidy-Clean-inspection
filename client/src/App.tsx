@@ -9,6 +9,7 @@ import Properties from "@/pages/Properties";
 import PricePage from "@/pages/PricePage";
 import Checkout from "@/pages/Checkout";
 import AuthPage from "@/pages/auth-page";
+import PricingManagement from "@/pages/admin/PricingManagement";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
@@ -26,6 +27,7 @@ function Router() {
       <ProtectedRoute path="/properties" component={Properties} />
       <ProtectedRoute path="/price/:id" component={PricePage} />
       <ProtectedRoute path="/checkout/:id" component={Checkout} />
+      <ProtectedRoute path="/admin/pricing" component={PricingManagement} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

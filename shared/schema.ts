@@ -3,16 +3,32 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Users (original table)
+// Users with roles
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("host"), // host or inspector
+  email: text("email"),
+  name: text("name"),
+  phone: text("phone"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
+export const insertUserSchema = createInsertSchema(users, {
+  username: (schema) => schema.min(3, "Username must be at least 3 characters"),
+  password: (schema) => schema.min(6, "Password must be at least 6 characters"),
+  role: (schema) => schema.refine(val => ["host", "inspector"].includes(val), {
+    message: "Role must be either 'host' or 'inspector'"
+  }),
+}).pick({
   username: true,
   password: true,
+  role: true,
+  email: true,
+  name: true,
+  phone: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -72,6 +88,7 @@ export const inspections = pgTable("inspections", {
   id: serial("id").primaryKey(),
   propertyId: integer("property_id").references(() => properties.id).notNull(),
   cleanerId: integer("cleaner_id").references(() => cleaners.id).notNull(),
+  requestedBy: integer("requested_by").references(() => users.id), // Host who requested the inspection
   date: timestamp("date").notNull(),
   durationMinutes: integer("duration_minutes").notNull().default(60),
   price: real("price").notNull().default(0),
@@ -93,6 +110,10 @@ export const inspectionsRelations = relations(inspections, ({ one, many }) => ({
   cleaner: one(cleaners, {
     fields: [inspections.cleanerId],
     references: [cleaners.id],
+  }),
+  requestingUser: one(users, {
+    fields: [inspections.requestedBy],
+    references: [users.id],
   }),
   addons: many(inspectionAddons),
 }));
