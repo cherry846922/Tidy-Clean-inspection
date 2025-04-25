@@ -346,6 +346,181 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   });
+  
+  // ===== Add-ons Routes =====
+  
+  // Get all active add-ons
+  app.get(`${apiPrefix}/addons`, async (req, res) => {
+    try {
+      const addons = await storage.getAllAddons();
+      res.json(addons);
+    } catch (error) {
+      console.error("Error fetching add-ons:", error);
+      res.status(500).json({ message: "Failed to fetch add-ons" });
+    }
+  });
+  
+  // Get single addon by id
+  app.get(`${apiPrefix}/addons/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid add-on ID" });
+      }
+      
+      const addon = await storage.getAddonById(id);
+      if (!addon) {
+        return res.status(404).json({ message: "Add-on not found" });
+      }
+      
+      res.json(addon);
+    } catch (error) {
+      console.error("Error fetching add-on:", error);
+      res.status(500).json({ message: "Failed to fetch add-on" });
+    }
+  });
+  
+  // Create a new add-on
+  app.post(`${apiPrefix}/addons`, async (req, res) => {
+    try {
+      const validatedData = schema.insertAddonSchema.parse(req.body);
+      const newAddon = await storage.insertAddon(validatedData);
+      res.status(201).json(newAddon);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating add-on:", error);
+      res.status(500).json({ message: "Failed to create add-on" });
+    }
+  });
+  
+  // Update add-on
+  app.patch(`${apiPrefix}/addons/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid add-on ID" });
+      }
+      
+      const validatedData = schema.insertAddonSchema.partial().parse(req.body);
+      const updatedAddon = await storage.updateAddon(id, validatedData);
+      
+      if (!updatedAddon) {
+        return res.status(404).json({ message: "Add-on not found" });
+      }
+      
+      res.json(updatedAddon);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error updating add-on:", error);
+      res.status(500).json({ message: "Failed to update add-on" });
+    }
+  });
+  
+  // ===== Inspection Add-ons Routes =====
+  
+  // Get all add-ons for an inspection
+  app.get(`${apiPrefix}/inspections/:id/addons`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid inspection ID" });
+      }
+      
+      const inspection = await storage.getInspectionById(id);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      
+      const addons = await storage.getInspectionAddons(id);
+      res.json(addons);
+    } catch (error) {
+      console.error("Error fetching inspection add-ons:", error);
+      res.status(500).json({ message: "Failed to fetch inspection add-ons" });
+    }
+  });
+  
+  // Add an add-on to an inspection
+  app.post(`${apiPrefix}/inspections/:id/addons`, async (req, res) => {
+    try {
+      const inspectionId = parseInt(req.params.id);
+      if (isNaN(inspectionId)) {
+        return res.status(400).json({ message: "Invalid inspection ID" });
+      }
+      
+      const { addonId, quantity } = req.body;
+      
+      if (!addonId || isNaN(parseInt(addonId))) {
+        return res.status(400).json({ message: "Invalid add-on ID" });
+      }
+      
+      const addonIdNum = parseInt(addonId);
+      const quantityNum = quantity ? parseInt(quantity) : 1;
+      
+      // Validate that both inspection and add-on exist
+      const inspection = await storage.getInspectionById(inspectionId);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      
+      const addon = await storage.getAddonById(addonIdNum);
+      if (!addon) {
+        return res.status(404).json({ message: "Add-on not found" });
+      }
+      
+      const result = await storage.addInspectionAddon(inspectionId, addonIdNum, quantityNum);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error adding add-on to inspection:", error);
+      res.status(500).json({ message: "Failed to add add-on to inspection" });
+    }
+  });
+  
+  // Remove an add-on from an inspection
+  app.delete(`${apiPrefix}/inspections/:inspectionId/addons/:addonId`, async (req, res) => {
+    try {
+      const inspectionId = parseInt(req.params.inspectionId);
+      const addonId = parseInt(req.params.addonId);
+      
+      if (isNaN(inspectionId) || isNaN(addonId)) {
+        return res.status(400).json({ message: "Invalid IDs provided" });
+      }
+      
+      const result = await storage.removeInspectionAddon(inspectionId, addonId);
+      
+      if (!result) {
+        return res.status(404).json({ message: "Add-on not found for this inspection" });
+      }
+      
+      res.json({ message: "Add-on removed from inspection" });
+    } catch (error) {
+      console.error("Error removing add-on from inspection:", error);
+      res.status(500).json({ message: "Failed to remove add-on from inspection" });
+    }
+  });
+  
+  // Get inspection with add-ons
+  app.get(`${apiPrefix}/inspections/:id/with-addons`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid inspection ID" });
+      }
+      
+      const inspection = await storage.getInspectionWithAddons(id);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      
+      res.json(inspection);
+    } catch (error) {
+      console.error("Error fetching inspection with add-ons:", error);
+      res.status(500).json({ message: "Failed to fetch inspection with add-ons" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

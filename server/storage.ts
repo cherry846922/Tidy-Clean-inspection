@@ -247,5 +247,98 @@ export const storage = {
       .returning();
     
     return this.getInspectionById(updatedInspection.id);
+  },
+  
+  // ===== Add-ons =====
+  async getAllAddons() {
+    return db.query.addons.findMany({
+      where: eq(schema.addons.isActive, true),
+      orderBy: [desc(schema.addons.createdAt)]
+    });
+  },
+  
+  async getAddonById(id: number) {
+    return db.query.addons.findFirst({
+      where: eq(schema.addons.id, id)
+    });
+  },
+  
+  async insertAddon(addon: schema.InsertAddon) {
+    const [newAddon] = await db.insert(schema.addons)
+      .values(addon)
+      .returning();
+    return newAddon;
+  },
+  
+  async updateAddon(id: number, addon: Partial<schema.InsertAddon>) {
+    const [updatedAddon] = await db.update(schema.addons)
+      .set(addon)
+      .where(eq(schema.addons.id, id))
+      .returning();
+    return updatedAddon;
+  },
+  
+  // ===== Inspection Add-ons =====
+  async getInspectionAddons(inspectionId: number) {
+    return db.query.inspectionAddons.findMany({
+      where: eq(schema.inspectionAddons.inspectionId, inspectionId),
+      with: {
+        addon: true
+      }
+    });
+  },
+  
+  async addInspectionAddon(inspectionId: number, addonId: number, quantity: number = 1) {
+    const existingRecord = await db.query.inspectionAddons.findFirst({
+      where: and(
+        eq(schema.inspectionAddons.inspectionId, inspectionId),
+        eq(schema.inspectionAddons.addonId, addonId)
+      )
+    });
+    
+    if (existingRecord) {
+      // Update quantity if already exists
+      const [updated] = await db.update(schema.inspectionAddons)
+        .set({ quantity })
+        .where(and(
+          eq(schema.inspectionAddons.inspectionId, inspectionId),
+          eq(schema.inspectionAddons.addonId, addonId)
+        ))
+        .returning();
+      return updated;
+    } else {
+      // Create new record
+      const [newRecord] = await db.insert(schema.inspectionAddons)
+        .values({
+          inspectionId,
+          addonId,
+          quantity
+        })
+        .returning();
+      return newRecord;
+    }
+  },
+  
+  async removeInspectionAddon(inspectionId: number, addonId: number) {
+    const [removed] = await db.delete(schema.inspectionAddons)
+      .where(and(
+        eq(schema.inspectionAddons.inspectionId, inspectionId),
+        eq(schema.inspectionAddons.addonId, addonId)
+      ))
+      .returning();
+    return removed;
+  },
+  
+  // Get inspection with add-ons
+  async getInspectionWithAddons(id: number) {
+    const inspection = await this.getInspectionById(id);
+    if (!inspection) return null;
+    
+    const addons = await this.getInspectionAddons(id);
+    
+    return {
+      ...inspection,
+      addons
+    };
   }
 };
