@@ -3,6 +3,7 @@ import { formatDate, getStatusClass, type Status, type PaymentStatus } from "@/l
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Inspection } from "@shared/schema";
+import { useLocation } from "wouter";
 
 interface InspectionCardProps {
   inspection: Inspection;
@@ -11,6 +12,7 @@ interface InspectionCardProps {
 
 export default function InspectionCard({ inspection, variant = "full" }: InspectionCardProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   const handleStatusChange = async (newStatus: Status) => {
     try {
@@ -34,6 +36,10 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
     }
   };
   
+  const handlePayNow = () => {
+    navigate(`/checkout/${inspection.id}`);
+  };
+  
   const inspectionTime = new Date(inspection.date).toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -48,7 +54,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
             <h3 className="font-medium text-[#484848]">{inspection.property.name}</h3>
             <p className="text-[#767676] text-sm mt-1">{formatDate(inspection.date)}, {inspectionTime}</p>
           </div>
-          <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
+          <div className={`${getStatusClass(inspection.status as Status)} text-white text-xs px-2 py-1 rounded-full`}>
             {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
           </div>
         </div>
@@ -72,7 +78,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
                 <Button 
                   variant="ghost" 
                   className="text-[#FF5A5F] hover:text-[#FF5A5F]/80 text-sm p-0"
-                  onClick={() => handleStatusChange('scheduled')}
+                  onClick={() => handleStatusChange('scheduled' as Status)}
                 >
                   Reschedule
                 </Button>
@@ -83,14 +89,14 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
                 <Button 
                   variant="ghost" 
                   className="text-[#00A699] hover:text-[#00A699]/80 text-sm p-1 mr-2"
-                  onClick={() => handleStatusChange('completed')}
+                  onClick={() => handleStatusChange('completed' as Status)}
                 >
                   Complete
                 </Button>
                 <Button 
                   variant="ghost" 
                   className="text-[#FF5A5F] hover:text-[#FF5A5F]/80 text-sm p-1"
-                  onClick={() => handleStatusChange('cancelled')}
+                  onClick={() => handleStatusChange('cancelled' as Status)}
                 >
                   Cancel
                 </Button>
@@ -110,7 +116,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
           <p className="text-[#767676] text-sm mt-1">{formatDate(inspection.date)}, {inspectionTime}</p>
         </div>
         <div className="flex flex-col items-end space-y-2">
-          <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
+          <div className={`${getStatusClass(inspection.status as Status)} text-white text-xs px-2 py-1 rounded-full`}>
             {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
           </div>
           {inspection.price > 0 && (
@@ -155,6 +161,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
             variant="outline"
             size="sm"
             className="text-[#FF5A5F] border-[#FF5A5F] text-xs ml-auto"
+            onClick={handlePayNow}
           >
             Pay Now
           </Button>
@@ -171,7 +178,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
         {inspection.status === 'scheduled' && (
           <>
             <Button 
-              onClick={() => handleStatusChange('completed')}
+              onClick={() => handleStatusChange('completed' as Status)}
               variant="ghost" 
               size="sm"
               className="text-[#00A699]"
@@ -182,7 +189,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
               Complete
             </Button>
             <Button 
-              onClick={() => handleStatusChange('cancelled')}
+              onClick={() => handleStatusChange('cancelled' as Status)}
               variant="ghost" 
               size="sm"
               className="text-[#FF5A5F]"
@@ -196,7 +203,7 @@ export default function InspectionCard({ inspection, variant = "full" }: Inspect
         )}
         {inspection.status === 'cancelled' && (
           <Button 
-            onClick={() => handleStatusChange('scheduled')}
+            onClick={() => handleStatusChange('scheduled' as Status)}
             variant="outline" 
             size="sm"
             className="text-[#FF5A5F] border-[#FF5A5F]"

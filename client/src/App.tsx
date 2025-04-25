@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/Calendar";
 import Inspections from "@/pages/Inspections";
 import Properties from "@/pages/Properties";
+import Checkout from "@/pages/Checkout";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Calendar} />
       <Route path="/inspections" component={Inspections} />
       <Route path="/properties" component={Properties} />
+      <Route path="/checkout/:id" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
   );

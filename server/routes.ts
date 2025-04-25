@@ -205,15 +205,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the inspection data
       const validatedData = schema.insertInspectionSchema.parse(req.body);
       
-      // Create the inspection
-      const newInspection = await storage.insertInspection({
+      // Create the inspection with optional price and payment status
+      const inspectionData: any = {
         propertyId: validatedData.propertyId,
         cleanerId: validatedData.cleanerId,
         date: req.body.date, // Use the original Date object
         durationMinutes: validatedData.durationMinutes,
         status: validatedData.status,
         notes: validatedData.notes || null
-      });
+      };
+      
+      // Add price if provided
+      if (req.body.price) {
+        inspectionData.price = parseFloat(req.body.price);
+      }
+      
+      // Set initial payment status
+      if (req.body.paymentStatus) {
+        inspectionData.paymentStatus = req.body.paymentStatus;
+      } else if (req.body.price && parseFloat(req.body.price) > 0) {
+        inspectionData.paymentStatus = 'unpaid';
+      }
+      
+      const newInspection = await storage.insertInspection(inspectionData);
       
       res.status(201).json(newInspection);
     } catch (error) {
