@@ -5,7 +5,7 @@ import * as schema from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import Stripe from "stripe";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');

@@ -9,6 +9,7 @@ import Properties from "@/pages/Properties";
 import PricePage from "@/pages/PricePage";
 import Checkout from "@/pages/Checkout";
 import AuthPage from "@/pages/auth-page";
+import Profile from "@/pages/profile";
 import PricingManagement from "@/pages/admin/PricingManagement";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";

@@ -4,6 +4,26 @@ import { eq, and, desc, gte, lte, or } from "drizzle-orm";
 
 // Property operations
 export const storage = {
+  // Users
+  async getUserByUsername(username: string) {
+    return db.query.users.findFirst({
+      where: eq(schema.users.username, username)
+    });
+  },
+  
+  async getUser(id: number) {
+    return db.query.users.findFirst({
+      where: eq(schema.users.id, id)
+    });
+  },
+  
+  async updateUser(id: number, userData: Partial<schema.InsertUser>) {
+    const [updatedUser] = await db.update(schema.users)
+      .set(userData)
+      .where(eq(schema.users.id, id))
+      .returning();
+    return updatedUser;
+  },
   // Properties
   async getAllProperties() {
     return db.query.properties.findMany({

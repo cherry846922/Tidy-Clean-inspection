@@ -82,7 +82,7 @@ export default function Profile() {
         title: "Profile updated",
         description: "Your profile information has been updated successfully.",
       });
-      queryClient.setQueryData(["/api/user"], old => ({
+      queryClient.setQueryData(["/api/user"], (old: any) => ({
         ...old,
         ...data,
       }));
@@ -130,7 +130,7 @@ export default function Profile() {
     updatePasswordMutation.mutate(values);
   };
 
-  const getInitials = (name?: string): string => {
+  const getInitials = (name?: string | null): string => {
     if (!name) return user?.username.substring(0, 2).toUpperCase() || "U";
     
     return name
@@ -172,7 +172,7 @@ export default function Profile() {
                   <div className="flex flex-col sm:flex-row items-center gap-4 pb-4">
                     <Avatar className="h-24 w-24 border-2 border-primary/10">
                       <AvatarFallback className="text-xl">
-                        {getInitials(user.name)}
+                        {getInitials(user.name || undefined)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
