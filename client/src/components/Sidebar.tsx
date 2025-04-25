@@ -1,5 +1,37 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader2, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+// Logout Button Component
+function LogoutButton() {
+  const { logoutMutation } = useAuth();
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+  
+  return (
+    <Button
+      variant="ghost"
+      className="w-full justify-start p-3 mt-2 text-[#484848]"
+      onClick={handleLogout}
+      disabled={logoutMutation.isPending}
+    >
+      {logoutMutation.isPending ? (
+        <>
+          <Loader2 className="h-5 w-5 mr-3 text-[#767676] animate-spin" />
+          <span>Logging out...</span>
+        </>
+      ) : (
+        <>
+          <LogOut className="h-5 w-5 mr-3 text-[#767676]" />
+          <span>Logout</span>
+        </>
+      )}
+    </Button>
+  );
+}
 
 interface SidebarProps {
   isOpen: boolean;
@@ -97,6 +129,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 Reports
               </Link>
             </li>
+            
+            {/* Only show pricing management for inspectors */}
+            {isInspector && (
+              <li>
+                <Link href="/admin/pricing" 
+                  className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/admin/pricing') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/admin/pricing') ? 'text-[#FF5A5F]' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Pricing Management
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
         <div className="p-4 border-t border-gray-200">
@@ -117,6 +163,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </svg>
             Help
           </Link>
+          
+          <LogoutButton />
         </div>
       </div>
     </>

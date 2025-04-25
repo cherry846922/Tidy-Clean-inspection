@@ -546,6 +546,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch inspection with add-ons" });
     }
   });
+  
+  // Base rate settings
+  app.post(`${apiPrefix}/settings/base-rate`, requireAuth, async (req, res) => {
+    try {
+      // Only inspectors can update base rate
+      if (req.user?.role !== "inspector") {
+        return res.status(403).json({ message: "Only inspectors can update base rates" });
+      }
+      
+      const { rate } = req.body;
+      if (!rate || isNaN(parseFloat(rate))) {
+        return res.status(400).json({ message: "Valid rate is required" });
+      }
+      
+      // In a real application, you would save this to a settings table
+      // For now, we'll just return success
+      res.json({ success: true, rate });
+    } catch (error) {
+      console.error("Error updating base rate:", error);
+      res.status(500).json({ message: "Failed to update base rate" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
