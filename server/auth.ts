@@ -28,10 +28,27 @@ export async function hashPassword(password: string) {
 }
 
 export async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      console.error("Invalid password format, missing hash or salt");
+      return false;
+    }
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    
+    // Ensure buffers are the same length
+    if (hashedBuf.length !== suppliedBuf.length) {
+      console.error(`Buffer length mismatch: ${hashedBuf.length} vs ${suppliedBuf.length}`);
+      return false;
+    }
+    
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Error comparing passwords:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
