@@ -291,10 +291,9 @@ export default function Dashboard() {
               {/* Main Dashboard Content */}
               <div className="lg:col-span-2">
                 <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-3 lg:w-[400px]">
+                  <TabsList className="grid grid-cols-2 lg:w-[400px]">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="properties">Properties</TabsTrigger>
-                    <TabsTrigger value="inspections">Inspections</TabsTrigger>
                   </TabsList>
                   
                   {/* Overview Tab */}
