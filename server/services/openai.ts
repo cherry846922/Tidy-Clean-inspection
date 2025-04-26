@@ -101,7 +101,46 @@ ${promptDataString}`;
     
   } catch (error: any) {
     console.error("Error generating property optimizations:", error);
-    throw new Error(`Failed to generate optimization suggestions: ${error.message || 'Unknown error'}`);
+    
+    // Check for quota exceeded error
+    if (error.type === 'insufficient_quota' || 
+        (error.message && error.message.includes('quota')) || 
+        error.status === 429 ||
+        (error.error && error.error.type === 'insufficient_quota')) {
+      // Return mock data for demonstration purposes when quota is exceeded
+      return [
+        {
+          category: "guest experience",
+          title: "Smart Home Controls Integration (Demo)",
+          description: "This is a demonstration suggestion since the OpenAI API quota has been exceeded. In a real scenario, AI would generate personalized suggestions for your property.",
+          impact: "high",
+          effort: "medium",
+          costEstimate: "$200-500",
+          timeframe: "1-2 weeks",
+          benefits: [
+            "Improves guest satisfaction with modern amenities",
+            "Allows convenient control of lighting and temperature",
+            "Sets your property apart from competitors"
+          ]
+        },
+        {
+          category: "maintenance",
+          title: "Preventative HVAC Maintenance Schedule (Demo)",
+          description: "Sample suggestion shown because OpenAI API quota is exceeded. Regular maintenance can prevent costly emergency repairs and guest complaints.",
+          impact: "medium",
+          effort: "low",
+          costEstimate: "$100-300/year",
+          timeframe: "Ongoing, quarterly",
+          benefits: [
+            "Prevents emergency breakdowns during guest stays",
+            "Extends the life of expensive equipment",
+            "Improves energy efficiency and reduces costs"
+          ]
+        }
+      ];
+    } else {
+      throw new Error(`Failed to generate optimization suggestions: ${error.message || 'Unknown error'}`);
+    }
   }
 }
 
@@ -136,6 +175,16 @@ export async function generatePropertyImprovementSummary(
     
   } catch (error: any) {
     console.error("Error generating improvement summary:", error);
-    return "Unable to generate property improvement summary at this time.";
+    
+    // Check for quota exceeded error
+    if (error.type === 'insufficient_quota' || 
+        (error.message && error.message.includes('quota')) || 
+        error.status === 429 ||
+        (error.error && error.error.type === 'insufficient_quota')) {
+      // Return fallback summary for demo purposes
+      return "DEMO MODE: This property could benefit from improved guest amenities and regular maintenance scheduling. Since the OpenAI API quota is exceeded, this is a demonstration summary. With an active API key, you would see personalized AI-generated optimization suggestions.";
+    } else {
+      return "Unable to generate property improvement summary at this time.";
+    }
   }
 }

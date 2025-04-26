@@ -159,20 +159,35 @@ export function PropertyOptimizationCard({
   }
 
   if (isError) {
+    // Check if the error is related to OpenAI API quota
+    const isQuotaError = error instanceof Error && 
+      (error.message.includes('quota') || error.message.includes('OpenAI API'));
+    
     return (
       <Card className={className}>
         <CardHeader>
           <CardTitle className="text-destructive flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            <div>Something went wrong</div>
+            <div>{isQuotaError ? "OpenAI API Quota Exceeded" : "Something went wrong"}</div>
           </CardTitle>
           <CardDescription>
-            We couldn't generate optimization suggestions at this time.
+            {isQuotaError 
+              ? "We couldn't generate optimization suggestions because the OpenAI API quota has been exceeded."
+              : "We couldn't generate optimization suggestions at this time."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="bg-destructive/10 p-4 rounded-md">
             <p className="text-sm text-destructive">{error instanceof Error ? error.message : 'Unknown error'}</p>
+            
+            {isQuotaError && (
+              <div className="mt-3 border-t border-destructive/20 pt-3">
+                <p className="text-sm text-muted-foreground">
+                  This feature requires an active OpenAI API key with available credits. 
+                  Please try again later or update the API key with one that has available quota.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter>
@@ -228,6 +243,15 @@ export function PropertyOptimizationCard({
           <div className="mt-4 bg-muted/50 p-3 rounded-md">
             <h4 className="text-sm font-medium mb-1">Summary</h4>
             <p className="text-sm text-muted-foreground">{data.summary}</p>
+            
+            {data.summary.includes("DEMO MODE") && (
+              <div className="mt-2 pt-2 border-t border-border">
+                <p className="text-xs text-amber-600 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>OpenAI API quota exceeded - viewing demo data</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardHeader>
@@ -257,7 +281,12 @@ export function PropertyOptimizationCard({
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-medium">{suggestion.title}</h3>
+                        <h3 className="font-medium">
+                          {suggestion.title}
+                          {suggestion.title.includes("Demo") && (
+                            <Badge variant="secondary" className="ml-2 text-xs">DEMO</Badge>
+                          )}
+                        </h3>
                         <Badge variant="outline" className="mt-1 capitalize">
                           {suggestion.category}
                         </Badge>
