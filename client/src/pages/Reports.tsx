@@ -100,6 +100,11 @@ export default function Reports() {
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [reportType, setReportType] = useState<string>("inspections");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [checklist, setChecklist] = useState<Array<{id: string, text: string, checked: boolean}>>([
+    { id: "1", text: "Inspect bathroom cleanliness", checked: false },
+    { id: "2", text: "Check kitchen appliances", checked: false },
+    { id: "3", text: "Verify smoke detector functionality", checked: false },
+  ]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +130,28 @@ export default function Reports() {
   // Remove image from preview
   const removeImage = (index: number) => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Toggle checklist item
+  const toggleChecklistItem = (id: string) => {
+    setChecklist(prev => prev.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+  
+  // Add new checklist item
+  const addChecklistItem = (text: string) => {
+    const newItem = { 
+      id: Date.now().toString(), 
+      text, 
+      checked: false 
+    };
+    setChecklist(prev => [...prev, newItem]);
+  };
+  
+  // Remove checklist item
+  const removeChecklistItem = (id: string) => {
+    setChecklist(prev => prev.filter(item => item.id !== id));
   };
   
   // Format date for display
@@ -312,6 +339,75 @@ export default function Reports() {
                           No images added yet
                         </div>
                       )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Inspection Checklist</Label>
+                    <div className="mt-2 border rounded-md p-4">
+                      <div className="space-y-2">
+                        {checklist.map(item => (
+                          <div key={item.id} className="flex items-center gap-2">
+                            <input 
+                              type="checkbox"
+                              id={`checklist-${item.id}`}
+                              checked={item.checked}
+                              onChange={() => toggleChecklistItem(item.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-[#FF5A5F] focus:ring-[#FF5A5F]"
+                            />
+                            <label 
+                              htmlFor={`checklist-${item.id}`}
+                              className="flex-grow text-sm text-gray-700"
+                            >
+                              {item.text}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => removeChecklistItem(item.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-3 flex gap-2">
+                        <Input 
+                          id="new-checklist-item"
+                          placeholder="Add new checklist item..."
+                          className="text-sm"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              addChecklistItem(e.currentTarget.value.trim());
+                              e.currentTarget.value = '';
+                              e.preventDefault();
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            const input = document.getElementById('new-checklist-item') as HTMLInputElement;
+                            if (input && input.value.trim()) {
+                              addChecklistItem(input.value.trim());
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Click items to mark them as completed</span>
+                          <span>{checklist.filter(item => item.checked).length}/{checklist.length} completed</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
