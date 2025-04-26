@@ -4,6 +4,7 @@ import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationCenter from "./NotificationCenter";
 import { AnimationToggle } from "./animation/AnimationToggle";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Logout Button Component
 function LogoutButton() {
@@ -68,7 +69,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </svg>
               Tidy Clean
             </h1>
-            <p className="text-[#767676] text-sm mt-1">Inspector</p>
+            <p className="text-[#767676] text-sm mt-1">{user?.role === 'host' ? 'Host' : 'Inspector'}</p>
           </div>
           <div className="flex items-center gap-2">
             {user && <NotificationCenter />}
@@ -227,6 +228,46 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </svg>
             Help
           </Link>
+          
+          {/* Debug User Role Switcher */}
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-gray-500 px-3">Debug Controls:</p>
+            <div className="flex justify-between space-x-2 px-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs w-1/2 border-blue-400 text-blue-500 hover:bg-blue-50"
+                onClick={async () => {
+                  // First logout
+                  await apiRequest("POST", "/api/logout");
+                  // Just reload since Cherry84 is already an inspector
+                  window.location.reload();
+                }}
+              >
+                Login as Host
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs w-1/2 border-green-400 text-green-500 hover:bg-green-50"
+                onClick={async () => {
+                  // First logout
+                  await apiRequest("POST", "/api/logout");
+                  // Then login as inspector
+                  const res = await apiRequest("POST", "/api/login", { 
+                    username: "InspectorJohn", 
+                    password: "password123"
+                  });
+                  if (res.ok) {
+                    queryClient.invalidateQueries(["/api/user"]);
+                    window.location.reload();
+                  }
+                }}
+              >
+                Login as Inspector
+              </Button>
+            </div>
+          </div>
           
           <LogoutButton />
         </div>
