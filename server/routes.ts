@@ -745,6 +745,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      // Get user for host journey tracking
+      const user = await storage.getUser(userId);
+      
       // Get current date for calculations
       const today = new Date();
       
@@ -838,6 +841,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
+      // Calculate host journey data
+      const createdAt = user?.createdAt || new Date();
+      const currentDate = new Date();
+      const daysActive = Math.floor((currentDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Calculate profile completion percentage
+      // Type-safe field checking
+      const hasName = !!user?.name;
+      const hasEmail = !!user?.email;
+      const hasPhone = !!user?.phone;
+      const profileFields = [hasName, hasEmail, hasPhone].filter(Boolean);
+      const profileCompletion = Math.round((profileFields.length / 3) * 100);
+      
+      // Determine host rank based on activity
+      let hostRank = 'Beginner';
+      if (completedInspections > 50) {
+        hostRank = 'Expert Host';
+      } else if (completedInspections > 20) {
+        hostRank = 'Advanced Host';
+      } else if (completedInspections > 5) {
+        hostRank = 'Established Host';
+      }
+      
+      // Get notification preferences
+      const notificationPreferences = await storage.getNotificationPreferences(userId);
+      
       res.json({
         summary: {
           properties: userProperties.length,
@@ -850,7 +879,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         upcomingInspections,
         monthlyData,
-        propertyPerformance
+        propertyPerformance,
+        hostJourney: {
+          name: user?.name || user?.username || "User",
+          profileCompletion,
+          propertiesCount: userProperties.length,
+          inspectionsCompleted: completedInspections,
+          daysActive,
+          rank: hostRank,
+          hasNotificationPreferences: !!notificationPreferences
+        }
       });
       
     } catch (error) {

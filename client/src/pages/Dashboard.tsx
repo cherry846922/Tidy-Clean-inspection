@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { 
@@ -46,6 +46,9 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Inspection } from "@shared/schema";
+import { AnimatedWelcome } from "@/components/AnimatedWelcome";
+import { HostJourneyTracker } from "@/components/HostJourneyTracker";
+import { PageTransition } from "@/components/animation";
 
 // Types for dashboard data
 interface DashboardData {
@@ -72,6 +75,21 @@ interface DashboardData {
     completionRate: number;
     inspectionCount: number;
   }[];
+}
+
+interface HostJourneyData {
+  name: string;
+  profileCompletion: number;
+  propertiesCount: number;
+  inspectionsCompleted: number;
+  daysActive: number;
+  rank?: string;
+  hasNotificationPreferences: boolean;
+}
+
+// Extended dashboard data type
+interface DashboardDataWithJourney extends DashboardData {
+  hostJourney?: HostJourneyData;
 }
 
 // Component for displaying a metric card
@@ -167,15 +185,31 @@ function PropertyPerformanceCard({ property }: {
 export default function Dashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showWelcome, setShowWelcome] = useState(true);
   
   // Query dashboard data
-  const { data, isLoading, error } = useQuery<DashboardData>({
+  const { data, isLoading, error } = useQuery<DashboardDataWithJourney>({
     queryKey: ['/api/dashboard/host'],
     enabled: !!user,
   });
   
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  
+  // When component mounts, check if we should show the welcome message
+  // In a real app, you might check localStorage or user preferences
+  useEffect(() => {
+    const lastShown = localStorage.getItem('welcomeLastShown');
+    if (lastShown) {
+      const daysSinceLastShown = (Date.now() - parseInt(lastShown)) / (1000 * 60 * 60 * 24);
+      setShowWelcome(daysSinceLastShown > 1);
+    }
+  }, []);
+  
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem('welcomeLastShown', Date.now().toString());
+  };
   
   // Format percentage for display
   const formatPercent = (value: number | null) => {
@@ -226,286 +260,322 @@ export default function Dashboard() {
   }
   
   return (
-    <div className="p-4 md:p-8 pb-20 md:pb-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#484848]">Host Dashboard</h1>
-          <p className="text-[#767676] mt-1">Track your property performance and inspection metrics</p>
-        </div>
-        
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-3 md:grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="inspections">Inspections</TabsTrigger>
-          </TabsList>
+    <PageTransition>
+      <div className="p-4 md:p-8 pb-20 md:pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-[#484848]">Host Dashboard</h1>
+            <p className="text-[#767676] mt-1">Track your property performance and inspection metrics</p>
+          </div>
           
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {isLoading ? (
-              renderSkeletonMetrics()
-            ) : data ? (
-              <>
-                {/* Metrics */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <MetricCard 
-                    title="Total Properties"
-                    value={data.summary.properties}
-                    icon={<Home className="h-4 w-4" />}
-                    color="text-purple-500"
-                  />
-                  <MetricCard 
-                    title="Total Inspections"
-                    value={data.summary.totalInspections}
-                    icon={<ClipboardList className="h-4 w-4" />}
-                    color="text-blue-500"
-                  />
-                  <MetricCard 
-                    title="Completion Rate"
-                    value={formatPercent(data.summary.completionRate)}
-                    icon={<CheckCircle className="h-4 w-4" />}
-                    color="text-green-500"
-                  />
-                  <MetricCard 
-                    title="Avg. Health Score"
-                    value={formatPercent(data.summary.avgHealthScore)}
-                    icon={<TrendingUp className="h-4 w-4" />}
-                    color="text-amber-500"
-                  />
-                </div>
+          {/* Animated Welcome */}
+          {showWelcome && data?.hostJourney && (
+            <AnimatedWelcome 
+              userName={data.hostJourney.name} 
+              onDismiss={handleDismissWelcome} 
+              className="mb-6"
+            />
+          )}
+          
+          {/* Host Journey & Dashboard Content layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Main Dashboard Content */}
+            <div className="lg:col-span-2">
+              <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-3 lg:w-[400px]">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="properties">Properties</TabsTrigger>
+                  <TabsTrigger value="inspections">Inspections</TabsTrigger>
+                </TabsList>
                 
-                {/* Charts */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Inspection Monthly Trends</CardTitle>
-                      <CardDescription>Number of inspections over the last 6 months</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={data.monthlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="completed" name="Completed" fill="#00C49F" />
-                          <Bar dataKey="scheduled" name="Scheduled" fill="#0088FE" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Inspection Status</CardTitle>
-                      <CardDescription>Distribution of inspection statuses</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex justify-center">
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={getStatusData()}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {getStatusData().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                {/* Upcoming Inspections */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-lg">Upcoming Inspections</CardTitle>
-                        <CardDescription>Scheduled for the next 7 days</CardDescription>
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="space-y-6">
+                  {isLoading ? (
+                    renderSkeletonMetrics()
+                  ) : data ? (
+                    <>
+                      {/* Metrics */}
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <MetricCard 
+                          title="Total Properties"
+                          value={data.summary.properties}
+                          icon={<Home className="h-4 w-4" />}
+                          color="text-purple-500"
+                        />
+                        <MetricCard 
+                          title="Total Inspections"
+                          value={data.summary.totalInspections}
+                          icon={<ClipboardList className="h-4 w-4" />}
+                          color="text-blue-500"
+                        />
+                        <MetricCard 
+                          title="Completion Rate"
+                          value={formatPercent(data.summary.completionRate)}
+                          icon={<CheckCircle className="h-4 w-4" />}
+                          color="text-green-500"
+                        />
+                        <MetricCard 
+                          title="Avg. Health Score"
+                          value={formatPercent(data.summary.avgHealthScore)}
+                          icon={<TrendingUp className="h-4 w-4" />}
+                          color="text-amber-500"
+                        />
                       </div>
-                      <Badge variant="outline" className="ml-2">
-                        {data.upcomingInspections.length} upcoming
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {data.upcomingInspections.length > 0 ? (
-                      <div className="space-y-4">
-                        {data.upcomingInspections.map((inspection) => (
-                          <div key={inspection.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
+                      
+                      {/* Charts */}
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Inspection Monthly Trends</CardTitle>
+                            <CardDescription>Number of inspections over the last 6 months</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={300}>
+                              <BarChart data={data.monthlyData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="completed" name="Completed" fill="#00C49F" />
+                                <Bar dataKey="scheduled" name="Scheduled" fill="#0088FE" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Inspection Status</CardTitle>
+                            <CardDescription>Distribution of inspection statuses</CardDescription>
+                          </CardHeader>
+                          <CardContent className="flex justify-center">
+                            <ResponsiveContainer width="100%" height={300}>
+                              <PieChart>
+                                <Pie
+                                  data={getStatusData()}
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                >
+                                  {getStatusData().map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {/* Upcoming Inspections */}
+                      <Card>
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
                             <div>
-                              <h4 className="font-medium">{inspection.property.name}</h4>
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                <span>{formatDate(inspection.date)}</span>
-                              </div>
+                              <CardTitle className="text-lg">Upcoming Inspections</CardTitle>
+                              <CardDescription>Scheduled for the next 7 days</CardDescription>
                             </div>
-                            <Badge variant="outline">
-                              {inspection.status}
+                            <Badge variant="outline" className="ml-2">
+                              {data.upcomingInspections.length} upcoming
                             </Badge>
                           </div>
+                        </CardHeader>
+                        <CardContent>
+                          {data.upcomingInspections.length > 0 ? (
+                            <div className="space-y-4">
+                              {data.upcomingInspections.map((inspection) => (
+                                <div key={inspection.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
+                                  <div>
+                                    <h4 className="font-medium">{inspection.property.name}</h4>
+                                    <div className="flex items-center text-sm text-muted-foreground">
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      <span>{formatDate(inspection.date)}</span>
+                                    </div>
+                                  </div>
+                                  <Badge variant="outline">
+                                    {inspection.status}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                              <p>No upcoming inspections</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : null}
+                </TabsContent>
+                
+                {/* Properties Tab */}
+                <TabsContent value="properties" className="space-y-6">
+                  {isLoading ? (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {[...Array(6)].map((_, i) => (
+                        <Card key={i}>
+                          <CardHeader>
+                            <Skeleton className="h-5 w-2/3" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-full" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : data && data.propertyPerformance.length > 0 ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {data.propertyPerformance.map((property) => (
+                          <PropertyPerformanceCard key={property.id} property={property} />
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-300" />
-                        <p>No upcoming inspections</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            ) : null}
-          </TabsContent>
-          
-          {/* Properties Tab */}
-          <TabsContent value="properties" className="space-y-6">
-            {isLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i}>
-                    <CardHeader>
-                      <Skeleton className="h-5 w-2/3" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : data && data.propertyPerformance.length > 0 ? (
-              <>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {data.propertyPerformance.map((property) => (
-                    <PropertyPerformanceCard key={property.id} property={property} />
-                  ))}
-                </div>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Properties Health Score Comparison</CardTitle>
-                    <CardDescription>Compare performance across your properties</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart
-                        data={data.propertyPerformance}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="healthScore" name="Health Score" fill="#8884d8" />
-                        <Bar dataKey="completionRate" name="Completion Rate" fill="#82ca9d" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Home className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No properties found</p>
-                <Button variant="outline" className="mt-4">
-                  Add Property
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Inspections Tab */}
-          <TabsContent value="inspections" className="space-y-6">
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-[300px] w-full" />
-                <Skeleton className="h-[200px] w-full" />
-              </div>
-            ) : data ? (
-              <>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card className="bg-green-50">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-green-600">{data.summary.completedInspections}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {data.summary.totalInspections > 0 
-                          ? `${Math.round((data.summary.completedInspections / data.summary.totalInspections) * 100)}% of total` 
-                          : 'No inspections yet'}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-blue-50">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-blue-600">{data.summary.scheduledInspections}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {data.summary.totalInspections > 0 
-                          ? `${Math.round((data.summary.scheduledInspections / data.summary.totalInspections) * 100)}% of total` 
-                          : 'No inspections yet'}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-orange-50">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-orange-600">{data.summary.cancelledInspections}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {data.summary.totalInspections > 0 
-                          ? `${Math.round((data.summary.cancelledInspections / data.summary.totalInspections) * 100)}% of total` 
-                          : 'No inspections yet'}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Properties Health Score Comparison</CardTitle>
+                          <CardDescription>Compare performance across your properties</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart
+                              data={data.propertyPerformance}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Bar dataKey="healthScore" name="Health Score" fill="#8884d8" />
+                              <Bar dataKey="completionRate" name="Completion Rate" fill="#82ca9d" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Home className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No properties found</p>
+                      <Button variant="outline" className="mt-4">
+                        Add Property
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
                 
+                {/* Inspections Tab */}
+                <TabsContent value="inspections" className="space-y-6">
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-[300px] w-full" />
+                      <Skeleton className="h-[200px] w-full" />
+                    </div>
+                  ) : data ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <Card className="bg-green-50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-green-600">{data.summary.completedInspections}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {data.summary.totalInspections > 0 
+                                ? `${Math.round((data.summary.completedInspections / data.summary.totalInspections) * 100)}% of total` 
+                                : 'No inspections yet'}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-blue-50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-blue-600">{data.summary.scheduledInspections}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {data.summary.totalInspections > 0 
+                                ? `${Math.round((data.summary.scheduledInspections / data.summary.totalInspections) * 100)}% of total` 
+                                : 'No inspections yet'}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-orange-50">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-orange-600">{data.summary.cancelledInspections}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {data.summary.totalInspections > 0 
+                                ? `${Math.round((data.summary.cancelledInspections / data.summary.totalInspections) * 100)}% of total` 
+                                : 'No inspections yet'}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Monthly Inspection Trends</CardTitle>
+                          <CardDescription>Track your inspection patterns over time</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <LineChart
+                              data={data.monthlyData}
+                              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="label" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Line type="monotone" dataKey="completed" name="Completed" stroke="#00C49F" />
+                              <Line type="monotone" dataKey="scheduled" name="Scheduled" stroke="#0088FE" />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : null}
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            {/* Host Journey Tracker */}
+            <div className="lg:col-span-1 order-first lg:order-last">
+              {isLoading ? (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Monthly Inspection Trends</CardTitle>
-                    <CardDescription>Track your inspection patterns over time</CardDescription>
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
                   </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart
-                        data={data.monthlyData}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="label" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="completed" name="Completed" stroke="#00C49F" />
-                        <Line type="monotone" dataKey="scheduled" name="Scheduled" stroke="#0088FE" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <CardContent className="space-y-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
                   </CardContent>
                 </Card>
-              </>
-            ) : null}
-          </TabsContent>
-        </Tabs>
+              ) : data?.hostJourney ? (
+                <HostJourneyTracker hostData={data.hostJourney} />
+              ) : null}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }
