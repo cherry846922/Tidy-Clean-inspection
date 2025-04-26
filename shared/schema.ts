@@ -93,7 +93,8 @@ export const inspections = pgTable("inspections", {
   requestedBy: integer("requested_by").references(() => users.id), // Host who requested the inspection
   date: timestamp("date").notNull(),
   durationMinutes: integer("duration_minutes").notNull().default(60),
-  price: real("price").notNull().default(0),
+  basePrice: real("base_price").notNull().default(0), // Base price before addons
+  price: real("price").notNull().default(0), // Total price including addons
   paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, processing, paid
   paymentId: text("payment_id"), // Stripe payment intent ID
   status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled
