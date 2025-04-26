@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 // Login form schema
 const loginSchema = z.object({
@@ -268,6 +269,47 @@ export default function AuthPage() {
                 </Form>
               </TabsContent>
             </Tabs>
+            
+            {/* Debug Login Options */}
+            <div className="mt-6 pt-4 border-t">
+              <p className="text-xs text-gray-500 mb-2">Quick Login (For Demo):</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  className="text-xs border-blue-400 text-blue-500" 
+                  onClick={async () => {
+                    const res = await apiRequest("POST", "/api/login", { 
+                      username: "HostUser", 
+                      password: "password123" 
+                    });
+                    if (res.ok) {
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  Login as Host
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  className="text-xs border-green-400 text-green-500" 
+                  onClick={async () => {
+                    const res = await apiRequest("POST", "/api/login", { 
+                      username: "Cherry84", 
+                      password: "password123" 
+                    });
+                    if (res.ok) {
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  Login as Inspector
+                </Button>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-center text-sm text-muted-foreground">
