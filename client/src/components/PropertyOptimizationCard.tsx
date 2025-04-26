@@ -368,9 +368,18 @@ export function PropertyOptimizationCard({
       </CardContent>
       
       <CardFooter className="flex justify-between">
-        <p className="text-xs text-muted-foreground">
-          Powered by AI analysis of your property data and inspection history.
-        </p>
+        <div>
+          <p className="text-xs text-muted-foreground">
+            Powered by AI analysis of your property data and inspection history.
+          </p>
+          
+          {data?.isDemoData && (
+            <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+              <AlertTriangle className="h-3 w-3" />
+              <span>Demo data shown due to OpenAI API quota limits</span>
+            </p>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

@@ -1016,10 +1016,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("Error generating AI optimization suggestions:", error);
-      res.status(500).json({ 
-        message: "Failed to generate optimization suggestions",
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      
+      // Check if error is related to OpenAI quota
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isQuotaError = errorMessage.includes('quota') || 
+                           errorMessage.includes('OpenAI API') || 
+                           (error as any)?.status === 429;
+      
+      // Get property and inspections data for retrying with demo data
+      const propertyId = parseInt(req.params.id);
+      let propertyData, inspectionsData;
+      
+      try {
+        propertyData = await storage.getPropertyById(propertyId);
+        inspectionsData = await storage.getAllInspections({ propertyId });
+      } catch (fetchError) {
+        return res.status(500).json({
+          message: "Failed to fetch data for fallback suggestions",
+          error: errorMessage
+        });
+      }
+      
+      if (isQuotaError && propertyData) {
+        try {
+          // The OpenAI service should now provide fallback data for quota errors
+          // Retry to get the fallback demo data
+          const catFocus = typeof req.query.category === 'string' ? req.query.category : undefined;
+          const suggestions = await generatePropertyOptimizations(propertyData, inspectionsData, catFocus);
+          const summary = await generatePropertyImprovementSummary(propertyData, inspectionsData);
+          
+          return res.json({
+            propertyId: propertyData.id,
+            propertyName: propertyData.name,
+            summary,
+            suggestions,
+            isDemoData: true
+          });
+        } catch (fallbackError) {
+          // If even fallback fails, return the original error
+          return res.status(500).json({
+            message: "Failed to generate optimization suggestions",
+            error: errorMessage
+          });
+        }
+      } else {
+        // For other errors, return standard error response
+        res.status(500).json({ 
+          message: "Failed to generate optimization suggestions",
+          error: errorMessage
+        });
+      }
     }
   });
 
