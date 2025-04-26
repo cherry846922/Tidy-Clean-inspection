@@ -65,10 +65,13 @@ export default function Inspections() {
         {/* Filter Bar */}
         <FilterBar onFilterChange={handleFilterChange} />
         
-        {/* Main Tabs - Properties and Inspections (Host only gets both tabs) */}
-        <Tabs defaultValue="inspections" className="mt-6">
+        {/* Main Tabs - Inspector gets Inspections tab, Host gets Properties tab */}
+        <Tabs defaultValue={isHost ? "properties" : "inspections"} className="mt-6">
           <TabsList className="mb-4">
-            <TabsTrigger value="inspections">Inspections</TabsTrigger>
+            {/* Inspections tab only visible to inspectors */}
+            {isInspector && (
+              <TabsTrigger value="inspections">Inspections</TabsTrigger>
+            )}
             {/* Properties tab only visible to hosts */}
             {isHost && (
               <TabsTrigger value="properties">Properties</TabsTrigger>
