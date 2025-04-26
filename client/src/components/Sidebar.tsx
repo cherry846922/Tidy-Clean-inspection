@@ -247,12 +247,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   // First logout
                   await apiRequest("POST", "/api/logout");
                   // Login as host
-                  const res = await apiRequest("POST", "/api/login", { 
-                    username: "HostUser", 
-                    password: "password123"
-                  });
-                  if (res.ok) {
-                    window.location.reload();
+                  try {
+                    console.log("Switching to host role...");
+                    const res = await apiRequest("POST", "/api/login", { 
+                      username: "HostDemo", 
+                      password: "password123"
+                    });
+                    if (res.ok) {
+                      console.log("Host login successful");
+                      window.location.reload();
+                    } else {
+                      console.error("Host login failed:", await res.text());
+                    }
+                  } catch (error) {
+                    console.error("Host login error:", error);
                   }
                 }}
               >
@@ -266,12 +274,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   // First logout
                   await apiRequest("POST", "/api/logout");
                   // Then login as inspector
-                  const res = await apiRequest("POST", "/api/login", { 
-                    username: "Cherry84", 
-                    password: "password123"
-                  });
-                  if (res.ok) {
-                    window.location.reload();
+                  try {
+                    console.log("Switching to inspector role...");
+                    const res = await apiRequest("POST", "/api/login", { 
+                      username: "Cherry84", 
+                      password: "password123"
+                    });
+                    if (res.ok) {
+                      console.log("Inspector login successful");
+                      window.location.reload();
+                    } else {
+                      console.error("Inspector login failed:", await res.text());
+                    }
+                  } catch (error) {
+                    console.error("Inspector login error:", error);
                   }
                 }}
               >
