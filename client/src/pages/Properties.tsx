@@ -15,8 +15,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import type { Property } from "@shared/schema";
-import { Loader2, Activity, Calendar, Home, Shield, Sparkles, SparkleIcon, MessageSquare } from "lucide-react";
+import { Loader2, Activity, Calendar, Home, Shield, Sparkles, SparkleIcon, MessageSquare, CheckSquare } from "lucide-react";
 import PropertyFeedbackDialog from "@/components/PropertyFeedbackDialog";
+import PropertyChecklistEditor from "@/components/PropertyChecklistEditor";
 
 const propertyFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -263,6 +264,7 @@ export default function Properties() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isChecklistDialogOpen, setIsChecklistDialogOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [, setLocation] = useLocation();
@@ -495,7 +497,19 @@ export default function Properties() {
                   {/* Health Score Component */}
                   <PropertyHealthScore propertyId={property.id} />
                   
-                  <div className="mt-4 flex justify-end space-x-2">
+                  <div className="mt-4 flex flex-wrap justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-emerald-600"
+                      onClick={() => {
+                        setSelectedPropertyId(property.id.toString());
+                        setIsChecklistDialogOpen(true);
+                      }}
+                    >
+                      <CheckSquare className="h-4 w-4 mr-1" />
+                      Checklist
+                    </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -562,6 +576,21 @@ export default function Properties() {
           setOpen={setIsFeedbackDialogOpen}
           initialPropertyId={selectedPropertyId}
         />
+        
+        {/* Property Checklist Dialog */}
+        <Dialog open={isChecklistDialogOpen} onOpenChange={setIsChecklistDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Property Checklist</DialogTitle>
+              <DialogDescription>
+                Create and manage checklists for this property
+              </DialogDescription>
+            </DialogHeader>
+            {selectedPropertyId && (
+              <PropertyChecklistEditor propertyId={parseInt(selectedPropertyId)} />
+            )}
+          </DialogContent>
+        </Dialog>
         
         {/* Property Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
