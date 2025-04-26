@@ -383,5 +383,89 @@ export const storage = {
       ...inspection,
       addons
     };
+  },
+  
+  // Checklist related functions
+  async getPropertyChecklist(propertyId: number) {
+    const sections = await db.query.checklistSections.findMany({
+      where: eq(schema.checklistSections.propertyId, propertyId),
+      orderBy: [schema.checklistSections.order],
+      with: {
+        items: {
+          orderBy: [schema.checklistItems.order]
+        }
+      }
+    });
+    
+    return { sections };
+  },
+  
+  async createChecklistSection(data: schema.InsertChecklistSection) {
+    // Get the count of existing sections to determine the order if not provided
+    const existingSections = await db.query.checklistSections.findMany({
+      where: eq(schema.checklistSections.propertyId, data.propertyId)
+    });
+    
+    const [section] = await db.insert(schema.checklistSections)
+      .values({
+        ...data,
+        order: data.order ?? existingSections.length
+      })
+      .returning();
+      
+    return section;
+  },
+  
+  async updateChecklistSection(id: number, data: Partial<schema.InsertChecklistSection>) {
+    const [section] = await db.update(schema.checklistSections)
+      .set(data)
+      .where(eq(schema.checklistSections.id, id))
+      .returning();
+      
+    return section;
+  },
+  
+  async deleteChecklistSection(id: number) {
+    // First delete all items in the section
+    await db.delete(schema.checklistItems)
+      .where(eq(schema.checklistItems.sectionId, id));
+      
+    // Then delete the section
+    await db.delete(schema.checklistSections)
+      .where(eq(schema.checklistSections.id, id));
+      
+    return { success: true };
+  },
+  
+  async createChecklistItem(data: schema.InsertChecklistItem & { imageUrl?: string }) {
+    // Get the count of existing items in this section to determine the order if not provided
+    const existingItems = await db.query.checklistItems.findMany({
+      where: eq(schema.checklistItems.sectionId, data.sectionId)
+    });
+    
+    const [item] = await db.insert(schema.checklistItems)
+      .values({
+        ...data,
+        order: data.order ?? existingItems.length
+      })
+      .returning();
+      
+    return item;
+  },
+  
+  async updateChecklistItem(id: number, data: Partial<schema.InsertChecklistItem> & { imageUrl?: string }) {
+    const [item] = await db.update(schema.checklistItems)
+      .set(data)
+      .where(eq(schema.checklistItems.id, id))
+      .returning();
+      
+    return item;
+  },
+  
+  async deleteChecklistItem(id: number) {
+    await db.delete(schema.checklistItems)
+      .where(eq(schema.checklistItems.id, id));
+      
+    return { success: true };
   }
 };

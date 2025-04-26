@@ -254,5 +254,65 @@ export const feedbackResponseSchema = z.object({
   suggestions: z.array(feedbackSuggestionSchema)
 });
 
+// Checklist schemas
+export const checklistSections = pgTable("checklist_sections", {
+  id: serial("id").primaryKey(),
+  propertyId: integer("property_id").references(() => properties.id).notNull(),
+  name: text("name").notNull(),
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const checklistSectionsRelations = relations(checklistSections, ({ one, many }) => ({
+  property: one(properties, { fields: [checklistSections.propertyId], references: [properties.id] }),
+  items: many(checklistItems)
+}));
+
+export const insertChecklistSectionSchema = createInsertSchema(checklistSections, {
+  name: (schema) => schema.min(1, "Section name is required"),
+  order: (schema) => schema.int("Order must be a number")
+});
+
+export type InsertChecklistSection = z.infer<typeof insertChecklistSectionSchema>;
+export type ChecklistSection = typeof checklistSections.$inferSelect;
+
+export const checklistItems = pgTable("checklist_items", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").references(() => checklistSections.id).notNull(),
+  description: text("description").notNull(),
+  order: integer("order").notNull(),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
+  section: one(checklistSections, { fields: [checklistItems.sectionId], references: [checklistSections.id] })
+}));
+
+export const insertChecklistItemSchema = createInsertSchema(checklistItems, {
+  description: (schema) => schema.min(1, "Item description is required"),
+  order: (schema) => schema.int("Order must be a number")
+});
+
+export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
+export type ChecklistItem = typeof checklistItems.$inferSelect;
+
+// Completed checklist response
+export const checklistData = z.object({
+  sections: z.array(z.object({
+    id: z.number(),
+    name: z.string(),
+    order: z.number(),
+    items: z.array(z.object({
+      id: z.number(),
+      description: z.string(),
+      order: z.number(),
+      imageUrl: z.string().nullable().optional()
+    }))
+  }))
+});
+
+export type ChecklistData = z.infer<typeof checklistData>;
+
 export type FeedbackSuggestion = z.infer<typeof feedbackSuggestionSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;
