@@ -61,8 +61,11 @@ function AppContent() {
       {/* Mobile Header - only if logged in */}
       {user && (
         <div className="md:hidden bg-white p-4 shadow-md flex justify-between items-center">
-          <h1 className="text-xl font-bold text-[#FF5A5F] flex items-center">
-            <i className="fas fa-broom mr-2"></i> CleanBnB
+          <h1 className="text-xl font-bold gradient-text-primary flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            Tidy Clean
           </h1>
           <button 
             className="text-[#484848] p-2 rounded-full hover:bg-gray-100"
