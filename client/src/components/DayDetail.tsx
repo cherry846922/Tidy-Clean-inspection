@@ -123,7 +123,7 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
                   {inspection.cleaner.name}
                 </div>
                 
-                <Link href={`/properties?propertyId=${inspection.propertyId}`}>
+                <Link href={`/properties?propertyId=${inspection.property.id}`}>
                   <div className="mt-2 flex items-center text-sm text-[#767676] cursor-pointer hover:text-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -219,7 +219,7 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
                           hour12: true 
                         })}
                       </div>
-                      <Link href={`/properties?propertyId=${inspection.propertyId}`}>
+                      <Link href={`/properties?propertyId=${inspection.property.id}`}>
                         <div className="mt-1 flex items-center text-sm text-[#767676] cursor-pointer hover:text-primary">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
