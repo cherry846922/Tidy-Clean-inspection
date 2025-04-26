@@ -411,6 +411,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentId: paymentIntent.id
         });
         
+        // Get the inspection details
+        const inspection = await storage.getInspectionById(inspectionId);
+        
+        if (inspection) {
+          // Send notification to all inspectors about the successful payment
+          try {
+            const inspectors = await storage.getUsersByRole('inspector');
+            
+            for (const inspector of inspectors) {
+              await storage.createNotification({
+                userId: inspector.id,
+                title: "Payment Received",
+                message: `Payment for inspection of ${inspection.property.name} has been received.`,
+                type: "payment_success",
+                relatedId: inspectionId,
+                relatedType: "inspection"
+              });
+            }
+          } catch (notificationError) {
+            console.error("Failed to send payment notification:", notificationError);
+            // Continue with the response even if notification fails
+          }
+        }
+        
         console.log(`Payment for inspection ${inspectionId} succeeded!`);
       }
       
@@ -1218,6 +1242,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting checklist item:", error);
       res.status(500).json({ message: "Failed to delete checklist item" });
+    }
+  });
+
+  // ===== Notification Routes =====
+  
+  // Get current user's notifications
+  app.get(`${apiPrefix}/notifications`, requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const notifications = await storage.getUserNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+  
+  // Get unread notification count for current user
+  app.get(`${apiPrefix}/notifications/unread-count`, requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread notification count:", error);
+      res.status(500).json({ message: "Failed to fetch unread notification count" });
+    }
+  });
+  
+  // Mark a notification as read
+  app.patch(`${apiPrefix}/notifications/:id/read`, requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid notification ID" });
+      }
+      
+      const updatedNotification = await storage.markNotificationAsRead(id);
+      if (!updatedNotification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      res.json(updatedNotification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+  
+  // Mark all notifications as read
+  app.post(`${apiPrefix}/notifications/mark-all-read`, requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
     }
   });
 
