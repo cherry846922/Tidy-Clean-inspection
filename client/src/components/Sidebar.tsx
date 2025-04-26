@@ -240,8 +240,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={async () => {
                   // First logout
                   await apiRequest("POST", "/api/logout");
-                  // Just reload since Cherry84 is already an inspector
-                  window.location.reload();
+                  // Login as host
+                  const res = await apiRequest("POST", "/api/login", { 
+                    username: "HostUser", 
+                    password: "password123"
+                  });
+                  if (res.ok) {
+                    window.location.reload();
+                  }
                 }}
               >
                 Login as Host
@@ -255,11 +261,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   await apiRequest("POST", "/api/logout");
                   // Then login as inspector
                   const res = await apiRequest("POST", "/api/login", { 
-                    username: "InspectorJohn", 
+                    username: "Cherry84", 
                     password: "password123"
                   });
                   if (res.ok) {
-                    queryClient.invalidateQueries(["/api/user"]);
                     window.location.reload();
                   }
                 }}
