@@ -88,8 +88,8 @@ export default function PricePage() {
   
   // Update price mutation
   const updatePriceMutation = useMutation({
-    mutationFn: (price: number) => 
-      apiRequest('PATCH', `/api/inspections/${id}`, { price }).then(res => res.json()),
+    mutationFn: (data: { price: number, basePrice: number }) => 
+      apiRequest('PATCH', `/api/inspections/${id}`, data).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/inspections', id] });
       queryClient.invalidateQueries({ queryKey: ['/api/inspections'] });
@@ -118,13 +118,18 @@ export default function PricePage() {
     }
   }, [inspectionAddons]);
   
-  // Calculate base price from inspection duration
+  // Initialize base price from existing data or calculate from duration
   useEffect(() => {
     if (inspection) {
-      // Calculate base inspection price ($30 per hour)
-      const hours = Math.max(1, inspection.durationMinutes / 60);
-      const calculatedBasePrice = Math.round(hours * 30);
-      setBasePrice(calculatedBasePrice);
+      if (inspection.basePrice > 0) {
+        // Use existing base price from the inspection
+        setBasePrice(inspection.basePrice);
+      } else {
+        // Calculate base inspection price ($30 per hour)
+        const hours = Math.max(1, inspection.durationMinutes / 60);
+        const calculatedBasePrice = Math.round(hours * 30);
+        setBasePrice(calculatedBasePrice);
+      }
     }
   }, [inspection]);
   
@@ -194,7 +199,11 @@ export default function PricePage() {
   
   // Save price and continue to checkout
   const handleSaveAndCheckout = () => {
-    updatePriceMutation.mutate(totalPrice);
+    const effectiveBasePrice = customBasePrice !== null ? customBasePrice : basePrice;
+    updatePriceMutation.mutate({ 
+      price: totalPrice,
+      basePrice: effectiveBasePrice
+    });
     navigate(`/checkout/${id}`);
   };
   
