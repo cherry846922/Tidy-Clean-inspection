@@ -20,6 +20,8 @@ export default function PricePage() {
   const { toast } = useToast();
   const [selectedAddons, setSelectedAddons] = useState<Record<number, number>>({});
   const [basePrice, setBasePrice] = useState(0);
+  const [customBasePrice, setCustomBasePrice] = useState<number | null>(null);
+  const [isEditingBasePrice, setIsEditingBasePrice] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   
   // Fetch inspection details
@@ -139,8 +141,31 @@ export default function PricePage() {
       });
     }
     
-    setTotalPrice(basePrice + addonTotal);
-  }, [basePrice, selectedAddons, addons]);
+    // Use custom base price if available, otherwise use calculated base price
+    const effectiveBasePrice = customBasePrice !== null ? customBasePrice : basePrice;
+    setTotalPrice(effectiveBasePrice + addonTotal);
+  }, [basePrice, customBasePrice, selectedAddons, addons]);
+  
+  // Handle base price edit
+  const handleBasePriceEdit = () => {
+    setIsEditingBasePrice(true);
+    setCustomBasePrice(customBasePrice !== null ? customBasePrice : basePrice);
+  };
+  
+  // Handle base price save
+  const handleBasePriceSave = () => {
+    setIsEditingBasePrice(false);
+    // Make sure customBasePrice is not negative
+    if (customBasePrice !== null && customBasePrice < 0) {
+      setCustomBasePrice(0);
+    }
+  };
+  
+  // Handle base price cancel
+  const handleBasePriceCancel = () => {
+    setIsEditingBasePrice(false);
+    setCustomBasePrice(null);
+  };
   
   // Handle adding or updating add-on
   const handleAddonChange = (addonId: number, checked: boolean) => {
@@ -218,7 +243,36 @@ export default function PricePage() {
             <CardContent>
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Base Price</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-medium">Base Price</h3>
+                    {!isEditingBasePrice ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleBasePriceEdit}
+                      >
+                        Edit Price
+                      </Button>
+                    ) : (
+                      <div className="space-x-2">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={handleBasePriceSave}
+                        >
+                          Save
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleBasePriceCancel}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50">
                     <div>
                       <p className="text-sm text-gray-500">Inspection Duration</p>
@@ -226,7 +280,23 @@ export default function PricePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-500">Base Price</p>
-                      <p className="font-medium">${basePrice.toFixed(2)}</p>
+                      {isEditingBasePrice ? (
+                        <div className="flex items-center justify-end mt-1">
+                          <span className="mr-2">$</span>
+                          <Input
+                            type="number"
+                            value={customBasePrice !== null ? customBasePrice : basePrice}
+                            onChange={(e) => setCustomBasePrice(parseFloat(e.target.value) || 0)}
+                            className="w-24 text-right"
+                            step="0.01"
+                            min="0"
+                          />
+                        </div>
+                      ) : (
+                        <p className="font-medium">
+                          ${(customBasePrice !== null ? customBasePrice : basePrice).toFixed(2)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -264,7 +334,12 @@ export default function PricePage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Base inspection price:</span>
-                  <span className="font-medium">${basePrice.toFixed(2)}</span>
+                  <span className="font-medium">
+                    ${(customBasePrice !== null ? customBasePrice : basePrice).toFixed(2)}
+                    {customBasePrice !== null && (
+                      <span className="text-gray-400 text-xs ml-2">(Custom price)</span>
+                    )}
+                  </span>
                 </div>
                 
                 {addons && Object.entries(selectedAddons).map(([addonId, quantity]) => {

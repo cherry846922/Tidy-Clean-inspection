@@ -970,6 +970,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== Checklist Routes =====
+  
+  // Get a property's checklist
+  app.get(`${apiPrefix}/properties/:propertyId/checklist`, async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.propertyId);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      // Check if property exists
+      const property = await storage.getPropertyById(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      const checklist = await storage.getPropertyChecklist(propertyId);
+      res.json(checklist);
+    } catch (error) {
+      console.error("Error fetching property checklist:", error);
+      res.status(500).json({ message: "Failed to fetch property checklist" });
+    }
+  });
+  
+  // Create a new checklist section
+  app.post(`${apiPrefix}/properties/:propertyId/checklist/sections`, async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.propertyId);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      // Check if property exists
+      const property = await storage.getPropertyById(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      const data = {
+        ...req.body,
+        propertyId
+      };
+      
+      const validatedData = schema.insertChecklistSectionSchema.parse(data);
+      const section = await storage.createChecklistSection(validatedData);
+      
+      res.status(201).json(section);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating checklist section:", error);
+      res.status(500).json({ message: "Failed to create checklist section" });
+    }
+  });
+  
+  // Update a checklist section
+  app.patch(`${apiPrefix}/checklist/sections/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid section ID" });
+      }
+      
+      const validatedData = schema.insertChecklistSectionSchema.partial().parse(req.body);
+      const section = await storage.updateChecklistSection(id, validatedData);
+      
+      if (!section) {
+        return res.status(404).json({ message: "Section not found" });
+      }
+      
+      res.json(section);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error updating checklist section:", error);
+      res.status(500).json({ message: "Failed to update checklist section" });
+    }
+  });
+  
+  // Delete a checklist section
+  app.delete(`${apiPrefix}/checklist/sections/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid section ID" });
+      }
+      
+      await storage.deleteChecklistSection(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting checklist section:", error);
+      res.status(500).json({ message: "Failed to delete checklist section" });
+    }
+  });
+  
+  // Create a checklist item within a section
+  app.post(`${apiPrefix}/checklist/sections/:sectionId/items`, async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      if (isNaN(sectionId)) {
+        return res.status(400).json({ message: "Invalid section ID" });
+      }
+      
+      const data = {
+        ...req.body,
+        sectionId
+      };
+      
+      const validatedData = schema.insertChecklistItemSchema.parse(data);
+      // Convert null imageUrl to undefined if it exists
+      const processedData = {
+        ...validatedData,
+        imageUrl: validatedData.imageUrl || undefined
+      };
+      const item = await storage.createChecklistItem(processedData);
+      
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating checklist item:", error);
+      res.status(500).json({ message: "Failed to create checklist item" });
+    }
+  });
+  
+  // Update a checklist item
+  app.patch(`${apiPrefix}/checklist/items/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      const validatedData = schema.insertChecklistItemSchema.partial().parse(req.body);
+      // Convert null imageUrl to undefined if it exists
+      const processedData = {
+        ...validatedData,
+        imageUrl: validatedData.imageUrl || undefined
+      };
+      const item = await storage.updateChecklistItem(id, processedData);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error updating checklist item:", error);
+      res.status(500).json({ message: "Failed to update checklist item" });
+    }
+  });
+  
+  // Delete a checklist item
+  app.delete(`${apiPrefix}/checklist/items/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      await storage.deleteChecklistItem(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting checklist item:", error);
+      res.status(500).json({ message: "Failed to delete checklist item" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

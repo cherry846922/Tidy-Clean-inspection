@@ -437,25 +437,35 @@ export const storage = {
     return { success: true };
   },
   
-  async createChecklistItem(data: schema.InsertChecklistItem & { imageUrl?: string }) {
+  async createChecklistItem(data: schema.InsertChecklistItem & { imageUrl?: string | null }) {
     // Get the count of existing items in this section to determine the order if not provided
     const existingItems = await db.query.checklistItems.findMany({
       where: eq(schema.checklistItems.sectionId, data.sectionId)
     });
     
+    // Remove null values for imageUrl
+    const itemData = {
+      ...data,
+      order: data.order ?? existingItems.length,
+      imageUrl: data.imageUrl || undefined // Convert null to undefined
+    };
+    
     const [item] = await db.insert(schema.checklistItems)
-      .values({
-        ...data,
-        order: data.order ?? existingItems.length
-      })
+      .values(itemData)
       .returning();
       
     return item;
   },
   
-  async updateChecklistItem(id: number, data: Partial<schema.InsertChecklistItem> & { imageUrl?: string }) {
+  async updateChecklistItem(id: number, data: Partial<schema.InsertChecklistItem> & { imageUrl?: string | null }) {
+    // Remove null values for imageUrl
+    const itemData = {
+      ...data,
+      imageUrl: data.imageUrl || undefined // Convert null to undefined
+    };
+    
     const [item] = await db.update(schema.checklistItems)
-      .set(data)
+      .set(itemData)
       .where(eq(schema.checklistItems.id, id))
       .returning();
       
