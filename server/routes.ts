@@ -1302,6 +1302,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to mark all notifications as read" });
     }
   });
+  
+  // NOTIFICATION PREFERENCES ROUTES
+  
+  // Get user's notification preferences
+  app.get(`${apiPrefix}/notification-preferences`, requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const preferences = await storage.getNotificationPreferences(userId);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+  
+  // Update user's notification preferences
+  app.patch(`${apiPrefix}/notification-preferences`, requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validate preferences using the schema
+      const validatedPrefs = schema.updateNotificationPreferencesSchema.parse(req.body);
+      
+      const updatedPreferences = await storage.updateNotificationPreferences(userId, validatedPrefs);
+      res.json(updatedPreferences);
+    } catch (error) {
+      // Handle validation errors gracefully
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ 
+          message: "Invalid notification preferences data", 
+          errors: validationError.details 
+        });
+      }
+      
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

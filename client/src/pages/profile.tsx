@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import NotificationPreferences from "@/components/NotificationPreferences";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Profile update schema
 const profileSchema = z.object({
@@ -153,12 +155,30 @@ export default function Profile() {
     <div className="container mx-auto py-10 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">My Profile</h1>
-        <p className="text-muted-foreground">Manage your account information and security</p>
+        <p className="text-muted-foreground">Manage your account information, security, and notification preferences</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Information */}
-        <div className="md:col-span-2">
+      <div className="flex flex-col sm:flex-row items-center gap-4 pb-6">
+        <Avatar className="h-24 w-24 border-2 border-primary/10">
+          <AvatarFallback className="text-xl">
+            {getInitials(user.name || undefined)}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
+          <p className="text-muted-foreground">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+          {user.email && <p className="text-sm">{user.email}</p>}
+        </div>
+      </div>
+
+      <Tabs defaultValue="profile" className="mb-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
@@ -169,19 +189,6 @@ export default function Profile() {
             <CardContent>
               <Form {...profileForm}>
                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 pb-4">
-                    <Avatar className="h-24 w-24 border-2 border-primary/10">
-                      <AvatarFallback className="text-xl">
-                        {getInitials(user.name || undefined)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
-                      <p className="text-muted-foreground">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
-                      {user.email && <p className="text-sm">{user.email}</p>}
-                    </div>
-                  </div>
-
                   <div className="space-y-4">
                     <FormField
                       control={profileForm.control}
@@ -283,13 +290,12 @@ export default function Profile() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Password Update */}
-        <div>
+        </TabsContent>
+        
+        <TabsContent value="security">
           <Card>
             <CardHeader>
-              <CardTitle>Security</CardTitle>
+              <CardTitle>Security Settings</CardTitle>
               <CardDescription>
                 Change your password
               </CardDescription>
@@ -353,7 +359,7 @@ export default function Profile() {
 
                   <Button 
                     type="submit" 
-                    className="w-full mt-2" 
+                    className="w-full mt-4" 
                     disabled={updatePasswordMutation.isPending}>
                     {updatePasswordMutation.isPending ? (
                       <>
@@ -366,8 +372,12 @@ export default function Profile() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="notifications">
+          <NotificationPreferences />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
