@@ -176,4 +176,17 @@
   .btn-gradient-accent {
     @apply text-white bg-gradient-to-r from-accent-500 to-accent-700 hover:from-accent-600 hover:to-accent-800 focus:ring-4 focus:ring-accent-300 rounded-lg;
   }
+  
+  /* Shadow effects */
+  .shadow-glow {
+    @apply shadow-lg shadow-primary-500/20;
+  }
+  
+  .shadow-glow-secondary {
+    @apply shadow-lg shadow-secondary-500/20;
+  }
+  
+  .shadow-glow-accent {
+    @apply shadow-lg shadow-accent-500/20;
+  }
 }

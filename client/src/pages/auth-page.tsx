@@ -97,10 +97,10 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left side: Auth form */}
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <Card className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 gradient-bg-soft">
+        <Card className="w-full max-w-md border shadow-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">CleanBnB</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center gradient-text-primary">CleanBnB</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
@@ -108,8 +108,8 @@ export default function AuthPage() {
           <CardContent>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-white">Login</TabsTrigger>
+                <TabsTrigger value="register" className="data-[state=active]:bg-primary data-[state=active]:text-white">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -143,7 +143,7 @@ export default function AuthPage() {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full btn-gradient-primary" 
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? (
@@ -217,7 +217,9 @@ export default function AuthPage() {
                             <Button
                               type="button"
                               variant={field.value === "host" ? "default" : "outline"}
-                              className={field.value === "host" ? "border-2 border-primary" : ""}
+                              className={field.value === "host" 
+                                ? "border-2 border-primary bg-gradient-to-r from-primary to-primary-light text-white shadow-md" 
+                                : "shadow-sm hover:shadow-md transition-all duration-200"}
                               onClick={() => registerForm.setValue("role", "host")}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -229,7 +231,9 @@ export default function AuthPage() {
                             <Button
                               type="button"
                               variant={field.value === "inspector" ? "default" : "outline"}
-                              className={field.value === "inspector" ? "border-2 border-primary" : ""}
+                              className={field.value === "inspector" 
+                                ? "border-2 border-primary bg-gradient-to-r from-primary to-primary-light text-white shadow-md" 
+                                : "shadow-sm hover:shadow-md transition-all duration-200"}
                               onClick={() => registerForm.setValue("role", "inspector")}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
@@ -250,7 +254,7 @@ export default function AuthPage() {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full" 
+                      className="w-full btn-gradient-primary" 
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? (
@@ -278,16 +282,16 @@ export default function AuthPage() {
       </div>
       
       {/* Right side: Hero section */}
-      <div className="flex-1 bg-primary p-8 hidden md:flex flex-col justify-center">
-        <div className="max-w-lg mx-auto text-primary-foreground">
+      <div className="flex-1 gradient-bg-primary p-8 hidden md:flex flex-col justify-center">
+        <div className="max-w-lg mx-auto text-white">
           <h1 className="text-4xl font-bold mb-4">Airbnb Inspection Management</h1>
           <p className="text-xl mb-6">
             Schedule, manage and pay for property inspections in one simple platform.
           </p>
           <div className="space-y-4">
             <div className="flex items-start">
-              <div className="bg-primary-foreground/10 p-2 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground">
+              <div className="bg-white/20 p-2 rounded-full mr-4 shadow-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                   <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
                   <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -300,8 +304,8 @@ export default function AuthPage() {
               </div>
             </div>
             <div className="flex items-start">
-              <div className="bg-primary-foreground/10 p-2 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground">
+              <div className="bg-white/20 p-2 rounded-full mr-4 shadow-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                   <path d="M5 22h14"/>
                   <path d="M5 2h14"/>
                   <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
