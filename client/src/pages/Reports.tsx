@@ -1,0 +1,378 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import PropertySelect from "@/components/PropertySelect";
+import { DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { format } from "date-fns";
+import { ChevronDown, Download, BarChart2, PieChart, LineChart } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Bar, PieChart as RePieChart, Pie, Cell } from "recharts";
+
+// Sample data for demonstration
+const inspectionData = [
+  { month: 'Jan', completed: 12, scheduled: 15 },
+  { month: 'Feb', completed: 15, scheduled: 18 },
+  { month: 'Mar', completed: 18, scheduled: 20 },
+  { month: 'Apr', completed: 22, scheduled: 22 },
+  { month: 'May', completed: 19, scheduled: 25 },
+  { month: 'Jun', completed: 23, scheduled: 28 },
+];
+
+const statusData = [
+  { name: 'Completed', value: 145, color: '#4CAF50' },
+  { name: 'Scheduled', value: 75, color: '#2196F3' },
+  { name: 'Cancelled', value: 25, color: '#F44336' },
+];
+
+const propertyData = [
+  { name: 'Beachside Villa', inspections: 36, score: 87 },
+  { name: 'Downtown Loft', inspections: 28, score: 92 },
+  { name: 'Mountain Cabin', inspections: 22, score: 78 },
+  { name: 'Lakefront Cottage', inspections: 19, score: 84 },
+];
+
+export default function Reports() {
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
+    to: new Date(),
+  });
+  const [propertyFilter, setPropertyFilter] = useState<string>("all");
+  const [reportType, setReportType] = useState<string>("inspections");
+  
+  // Format date for display
+  const dateDisplay = date?.from && date?.to
+    ? `${format(date.from, "MMM d, yyyy")} - ${format(date.to, "MMM d, yyyy")}`
+    : "Select date range";
+
+  return (
+    <div className="p-4 md:p-8 pb-20 md:pb-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#484848]">Reports</h1>
+          <p className="text-[#767676] mt-1">View and export performance reports</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Report Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={reportType} onValueChange={setReportType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select report type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inspections">Inspection Activity</SelectItem>
+                  <SelectItem value="property">Property Performance</SelectItem>
+                  <SelectItem value="financial">Financial Summary</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Property</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PropertySelect 
+                value={propertyFilter}
+                onChange={setPropertyFilter}
+                includeAll={true}
+                placeholder="All Properties"
+              />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Date Range</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DatePickerWithRange date={date} setDate={setDate} />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            {reportType === "inspections" ? "Inspection Activity" : 
+             reportType === "property" ? "Property Performance" : 
+             "Financial Summary"}
+          </h2>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
+        </div>
+        
+        <Tabs defaultValue="chart" className="mb-8">
+          <TabsList className="mb-4">
+            <TabsTrigger value="chart" className="flex items-center gap-2">
+              <BarChart2 className="w-4 h-4" />
+              Chart View
+            </TabsTrigger>
+            <TabsTrigger value="table" className="flex items-center gap-2">
+              <LineChart className="w-4 h-4" />
+              Table View
+            </TabsTrigger>
+            <TabsTrigger value="summary" className="flex items-center gap-2">
+              <PieChart className="w-4 h-4" />
+              Summary
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chart">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {reportType === "inspections" ? "Monthly Inspection Activity" : 
+                   reportType === "property" ? "Property Performance" : 
+                   "Monthly Revenue"}
+                </CardTitle>
+                <CardDescription>
+                  {dateDisplay} • {propertyFilter === "all" ? "All Properties" : `Property: ${propertyFilter}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {reportType === "inspections" ? (
+                      <BarChart data={inspectionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="completed" fill="#4CAF50" name="Completed" />
+                        <Bar dataKey="scheduled" fill="#2196F3" name="Scheduled" />
+                      </BarChart>
+                    ) : reportType === "property" ? (
+                      <BarChart data={propertyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="inspections" fill="#2196F3" name="Inspections" />
+                        <Bar dataKey="score" fill="#FF5A5F" name="Health Score" />
+                      </BarChart>
+                    ) : (
+                      <BarChart data={inspectionData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="completed" fill="#4CAF50" name="Revenue ($)" />
+                      </BarChart>
+                    )}
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="table">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {reportType === "inspections" ? "Inspection Details" : 
+                   reportType === "property" ? "Property Details" : 
+                   "Financial Details"}
+                </CardTitle>
+                <CardDescription>
+                  {dateDisplay} • {propertyFilter === "all" ? "All Properties" : `Property: ${propertyFilter}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {reportType === "inspections" ? (
+                          <>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Rate</th>
+                          </>
+                        ) : reportType === "property" ? (
+                          <>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inspections</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Score</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Revenue</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Add-on Revenue</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                          </>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {reportType === "inspections" ? (
+                        inspectionData.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.month}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.scheduled}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.completed}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {Math.round((item.completed / item.scheduled) * 100)}%
+                            </td>
+                          </tr>
+                        ))
+                      ) : reportType === "property" ? (
+                        propertyData.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.inspections}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.score}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                item.score >= 85 ? 'bg-green-100 text-green-800' : 
+                                item.score >= 70 ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {item.score >= 85 ? 'Excellent' : 
+                                 item.score >= 70 ? 'Good' : 
+                                 'Needs Attention'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        inspectionData.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.month}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.completed * 75}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.completed * 25}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                              ${item.completed * 100}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="summary">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {reportType === "inspections" ? "Inspection Summary" : 
+                   reportType === "property" ? "Property Summary" : 
+                   "Financial Summary"}
+                </CardTitle>
+                <CardDescription>
+                  {dateDisplay} • {propertyFilter === "all" ? "All Properties" : `Property: ${propertyFilter}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RePieChart>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`${value}`, 'Count']} />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="flex flex-col justify-center space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {reportType === "inspections" ? (
+                        <>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Total Inspections</p>
+                            <p className="text-2xl font-bold">245</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Completion Rate</p>
+                            <p className="text-2xl font-bold">87%</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Avg Duration</p>
+                            <p className="text-2xl font-bold">45 min</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Issues Found</p>
+                            <p className="text-2xl font-bold">68</p>
+                          </div>
+                        </>
+                      ) : reportType === "property" ? (
+                        <>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Total Properties</p>
+                            <p className="text-2xl font-bold">12</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Avg Health Score</p>
+                            <p className="text-2xl font-bold">85</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Top Property</p>
+                            <p className="text-2xl font-bold">Downtown Loft</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Needs Attention</p>
+                            <p className="text-2xl font-bold">2</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Total Revenue</p>
+                            <p className="text-2xl font-bold">$24,500</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Base Revenue</p>
+                            <p className="text-2xl font-bold">$18,375</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Add-on Revenue</p>
+                            <p className="text-2xl font-bold">$6,125</p>
+                          </div>
+                          <div className="bg-gray-100 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Avg Per Inspection</p>
+                            <p className="text-2xl font-bold">$100</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

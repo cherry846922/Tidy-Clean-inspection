@@ -12,6 +12,7 @@ import AuthPage from "@/pages/auth-page";
 import Profile from "@/pages/profile";
 import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
+import Reports from "@/pages/Reports";
 import PricingManagement from "@/pages/admin/PricingManagement";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
@@ -33,6 +34,7 @@ function Router() {
       <ProtectedRoute path="/price/:id" component={PricePage} />
       <ProtectedRoute path="/checkout/:id" component={Checkout} />
       <ProtectedRoute path="/products" component={Products} />
+      <ProtectedRoute path="/reports" component={Reports} />
       <ProtectedRoute path="/admin/pricing" component={PricingManagement} />
       <ProtectedRoute path="/profile" component={Profile} />
       <Route path="/auth" component={AuthPage} />
