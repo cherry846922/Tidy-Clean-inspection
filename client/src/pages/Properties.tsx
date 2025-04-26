@@ -260,6 +260,7 @@ function PropertyHealthScore({ propertyId }: { propertyId: number }) {
 export default function Properties() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties'],
@@ -440,6 +441,15 @@ export default function Properties() {
                   <PropertyHealthScore propertyId={property.id} />
                   
                   <div className="mt-4 flex justify-end space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-purple-600"
+                      onClick={() => setIsFeedbackDialogOpen(true)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Get Feedback
+                    </Button>
                     <Button variant="outline" size="sm">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -472,6 +482,12 @@ export default function Properties() {
             </Button>
           </div>
         )}
+        
+        {/* Property Feedback Dialog */}
+        <PropertyFeedbackDialog 
+          open={isFeedbackDialogOpen} 
+          setOpen={setIsFeedbackDialogOpen} 
+        />
       </div>
     </div>
   );
