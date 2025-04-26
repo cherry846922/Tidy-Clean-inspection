@@ -4,13 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import PropertySelect from "@/components/PropertySelect";
+import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { format } from "date-fns";
-import { ChevronDown, Download, BarChart2, PieChart, LineChart } from "lucide-react";
+import { ChevronDown, Download, BarChart2, PieChart, LineChart, Plus, Calendar as CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Bar, PieChart as RePieChart, Pie, Cell } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 // Sample data for demonstration
 const inspectionData = [
@@ -35,13 +40,92 @@ const propertyData = [
   { name: 'Lakefront Cottage', inspections: 19, score: 84 },
 ];
 
+// DatePickerWithRange component
+function DatePickerWithRange({ 
+  date, 
+  setDate, 
+  className 
+}: { 
+  date: DateRange | undefined, 
+  setDate: (date: DateRange | undefined) => void,
+  className?: string 
+}) {
+  return (
+    <div className={cn("grid gap-2", className)}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id="date"
+            variant={"outline"}
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !date && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date?.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                </>
+              ) : (
+                format(date.from, "LLL dd, y")
+              )
+            ) : (
+              <span>Pick a date range</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={date?.from}
+            selected={date}
+            onSelect={setDate}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 export default function Reports() {
+  const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
     to: new Date(),
   });
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [reportType, setReportType] = useState<string>("inspections");
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Convert files to array and process each
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setUploadedImages(prev => [...prev, e.target!.result as string]);
+          toast({
+            title: "Image uploaded",
+            description: `${file.name} has been added to your report.`,
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  
+  // Remove image from preview
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
   
   // Format date for display
   const dateDisplay = date?.from && date?.to
@@ -105,10 +189,164 @@ export default function Reports() {
              reportType === "property" ? "Property Performance" : 
              "Financial Summary"}
           </h2>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
+          <div className="flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Custom Report
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-semibold text-[#FF5A5F]">Create Custom Report</DialogTitle>
+                  <DialogDescription>
+                    Define parameters for your custom report
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="report-name">Report Name</Label>
+                    <Input id="report-name" placeholder="Q2 Financial Analysis" className="mt-1" />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="report-type">Report Type</Label>
+                    <Select defaultValue="inspections">
+                      <SelectTrigger id="report-type" className="mt-1">
+                        <SelectValue placeholder="Select report type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inspections">Inspection Activity</SelectItem>
+                        <SelectItem value="property">Property Performance</SelectItem>
+                        <SelectItem value="financial">Financial Summary</SelectItem>
+                        <SelectItem value="custom">Custom Metrics</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="report-property">Property</Label>
+                    <PropertySelect 
+                      value="all"
+                      onChange={() => {}}
+                      includeAll={true}
+                      placeholder="All Properties"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="date-range">Date Range</Label>
+                    <DatePickerWithRange 
+                      date={date} 
+                      setDate={setDate} 
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="report-format">Output Format</Label>
+                    <Select defaultValue="pdf">
+                      <SelectTrigger id="report-format" className="mt-1">
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pdf">PDF Document</SelectItem>
+                        <SelectItem value="csv">CSV Spreadsheet</SelectItem>
+                        <SelectItem value="json">JSON Data</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label>Add Images</Label>
+                    <div className="mt-1 border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 transition">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        className="hidden" 
+                        id="image-upload" 
+                        onChange={handleFileUpload}
+                      />
+                      <label htmlFor="image-upload" className="cursor-pointer w-full h-full block">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="text-gray-400 rounded-full p-2 bg-gray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Drag & drop images here, or click to browse
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Upload property photos, inspection evidence, or report illustrations
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {/* Image preview area */}
+                    <div className="mt-3 flex gap-2 flex-wrap">
+                      <div className="w-16 h-16 relative rounded-md overflow-hidden border">
+                        <img src="https://placehold.co/100x100/e2e8f0/64748b?text=Sample" alt="Preview" className="w-full h-full object-cover" />
+                        <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                          ×
+                        </button>
+                      </div>
+                      <div className="w-16 h-16 relative rounded-md overflow-hidden border">
+                        <img src="https://placehold.co/100x100/e2e8f0/64748b?text=Sample" alt="Preview" className="w-full h-full object-cover" />
+                        <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="report-schedule">Schedule (Optional)</Label>
+                    <Select defaultValue="none">
+                      <SelectTrigger id="report-schedule" className="mt-1">
+                        <SelectValue placeholder="Select schedule" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Run Once</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="button" 
+                    className="bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white"
+                    onClick={() => {
+                      toast({
+                        title: "Report created",
+                        description: "Your custom report has been created successfully.",
+                      });
+                    }}
+                  >
+                    Create Report
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+          </div>
         </div>
         
         <Tabs defaultValue="chart" className="mb-8">
