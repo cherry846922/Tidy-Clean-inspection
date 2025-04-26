@@ -343,3 +343,32 @@ export type Notification = typeof notifications.$inferSelect;
 
 export type FeedbackSuggestion = z.infer<typeof feedbackSuggestionSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;
+
+// Notification preferences
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  emailNotifications: boolean("email_notifications").notNull().default(true),
+  pushNotifications: boolean("push_notifications").notNull().default(true),
+  inspectionReminders: boolean("inspection_reminders").notNull().default(true),
+  paymentNotifications: boolean("payment_notifications").notNull().default(true), 
+  reportNotifications: boolean("report_notifications").notNull().default(true),
+  propertyUpdates: boolean("property_updates").notNull().default(true),
+  marketingNotifications: boolean("marketing_notifications").notNull().default(false),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, { fields: [notificationPreferences.userId], references: [users.id] }),
+}));
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences);
+export const updateNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  userId: true,
+  updatedAt: true,
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type UpdateNotificationPreferences = z.infer<typeof updateNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
