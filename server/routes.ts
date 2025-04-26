@@ -6,6 +6,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import Stripe from "stripe";
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
+import { generatePropertyOptimizations, generatePropertyImprovementSummary } from "./services/openai";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -979,6 +980,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // One-click AI Property Optimization Suggestions
+  app.get(`${apiPrefix}/properties/:id/optimization-suggestions`, requireAuth, async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      // Get property details
+      const property = await storage.getPropertyById(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      // Get property's inspection history
+      const inspections = await storage.getAllInspections({ propertyId });
+      
+      // Optional category filter from query parameters
+      const categoryFocus = typeof req.query.category === 'string' ? req.query.category : undefined;
+      
+      // Generate AI optimization suggestions using OpenAI
+      const suggestions = await generatePropertyOptimizations(property, inspections, categoryFocus);
+      
+      // Generate a summary of improvements
+      const summary = await generatePropertyImprovementSummary(property, inspections);
+      
+      // Return the optimization response
+      res.json({
+        propertyId: property.id,
+        propertyName: property.name,
+        summary,
+        suggestions
+      });
+      
+    } catch (error) {
+      console.error("Error generating AI optimization suggestions:", error);
+      res.status(500).json({ 
+        message: "Failed to generate optimization suggestions",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Generate property improvement suggestions and feedback
   app.get(`${apiPrefix}/properties/:id/feedback-suggestions`, requireAuth, async (req, res) => {
     try {
