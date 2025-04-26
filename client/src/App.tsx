@@ -14,6 +14,7 @@ import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import Reports from "@/pages/Reports";
 import PricingManagement from "@/pages/admin/PricingManagement";
+import PropertyOptimization from "@/pages/PropertyOptimization";
 import AnimationDemo from "@/pages/AnimationDemo";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
@@ -50,6 +51,7 @@ function Router() {
       <ProtectedRoute path="/checkout/:id" component={renderWithAnimation(Checkout)} />
       <ProtectedRoute path="/products" component={renderWithAnimation(Products)} />
       <ProtectedRoute path="/reports" component={renderWithAnimation(Reports)} />
+      <ProtectedRoute path="/optimization" component={renderWithAnimation(PropertyOptimization)} />
       <ProtectedRoute path="/admin/pricing" component={renderWithAnimation(PricingManagement)} />
       <ProtectedRoute path="/profile" component={renderWithAnimation(Profile)} />
       <ProtectedRoute path="/animation-demo" component={renderWithAnimation(AnimationDemo)} />

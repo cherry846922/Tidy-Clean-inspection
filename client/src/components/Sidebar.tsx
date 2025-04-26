@@ -171,6 +171,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </li>
             )}
             
+            {/* Property Optimization Page */}
+            <li>
+              <Link href="/optimization" 
+                className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/optimization') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/optimization') ? 'text-primary' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Property Optimization
+              </Link>
+            </li>
+            
             {/* Animation Demo Page */}
             <li>
               <Link href="/animation-demo" 

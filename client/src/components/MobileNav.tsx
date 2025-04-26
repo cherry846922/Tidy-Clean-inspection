@@ -39,6 +39,14 @@ export default function MobileNav() {
         </svg>
         <span className="text-xs mt-1">Properties</span>
       </Link>
+      <Link href="/optimization" 
+        className={`flex flex-col items-center p-2 ${isActive('/optimization') ? 'text-primary' : 'text-[#767676]'}`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span className="text-xs mt-1">Optimize</span>
+      </Link>
       <Link href="/profile" 
         className={`flex flex-col items-center p-2 ${isActive('/profile') ? 'text-primary' : 'text-[#767676]'}`}
       >
