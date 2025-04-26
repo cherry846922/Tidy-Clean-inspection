@@ -490,7 +490,8 @@ export default function Properties() {
         {/* Property Feedback Dialog */}
         <PropertyFeedbackDialog 
           open={isFeedbackDialogOpen} 
-          setOpen={setIsFeedbackDialogOpen} 
+          setOpen={setIsFeedbackDialogOpen}
+          initialPropertyId={selectedPropertyId}
         />
       </div>
     </div>
