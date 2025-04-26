@@ -69,7 +69,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </svg>
               Tidy Clean
             </h1>
-            <p className="text-[#767676] text-sm mt-1">{user?.role === 'host' ? 'Host' : 'Inspector'}</p>
+            <p className="text-[#767676] text-sm mt-1">
+              {user?.role === 'host' ? (
+                <span className="text-blue-500 font-medium">Host Account</span>
+              ) : (
+                <span className="text-green-500 font-medium">Inspector Account</span>
+              )}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {user && <NotificationCenter />}
