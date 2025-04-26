@@ -188,13 +188,15 @@ export default function Products() {
             <p className="text-[#767676] mt-1">Manage your add-on products and pricing</p>
           </div>
           <div className="mt-4 md:mt-0">
+            <Button 
+              className="bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+            
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-              </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Add New Product</DialogTitle>
