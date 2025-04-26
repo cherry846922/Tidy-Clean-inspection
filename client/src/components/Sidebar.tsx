@@ -140,18 +140,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             </li>
             
-            {/* Only show pricing management for inspectors */}
+            {/* Only show products and pricing management for inspectors */}
             {isInspector && (
-              <li>
-                <Link href="/admin/pricing" 
-                  className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/admin/pricing') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/admin/pricing') ? 'text-primary' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Pricing Management
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link href="/products" 
+                    className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/products') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/products') ? 'text-primary' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8 4-8-4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Products
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/admin/pricing" 
+                    className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/admin/pricing') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/admin/pricing') ? 'text-primary' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pricing Management
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </nav>
