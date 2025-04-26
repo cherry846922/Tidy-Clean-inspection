@@ -19,6 +19,7 @@ import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AnimationProvider } from "@/contexts/animation-context";
 
 function Router() {
   const [location] = useLocation();
@@ -96,8 +97,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppContent />
-        <Toaster />
+        <AnimationProvider>
+          <AppContent />
+          <Toaster />
+        </AnimationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

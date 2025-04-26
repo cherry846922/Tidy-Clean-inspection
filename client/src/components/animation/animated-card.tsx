@@ -1,10 +1,10 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { scaleIn } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
-interface AnimatedCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AnimatedCardProps {
   children: React.ReactNode;
   className?: string;
   header?: React.ReactNode;
@@ -24,7 +24,6 @@ export function AnimatedCard({
   cardHeaderClassName,
   cardFooterClassName,
   variant = "default",
-  ...props
 }: AnimatedCardProps) {
   return (
     <motion.div
@@ -35,7 +34,6 @@ export function AnimatedCard({
       whileHover={variant === "hover" || variant === "interactive" ? { scale: 1.02 } : undefined}
       whileTap={variant === "interactive" ? { scale: 0.98 } : undefined}
       className={cn("h-full", className)}
-      {...props}
     >
       <Card className="h-full">
         {header && <CardHeader className={cardHeaderClassName}>{header}</CardHeader>}

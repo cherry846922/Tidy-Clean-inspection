@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationCenter from "./NotificationCenter";
+import { AnimationToggle } from "./animation/AnimationToggle";
 
 // Logout Button Component
 function LogoutButton() {
@@ -180,6 +181,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </svg>
             My Profile
           </Link>
+          <div className="p-3 rounded-lg">
+            <AnimationToggle />
+          </div>
+          
           <Link href="#" 
             className="flex items-center p-3 text-[#484848] rounded-lg font-medium hover:bg-gray-100"
           >
