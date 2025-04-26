@@ -321,6 +321,28 @@ export const storage = {
     return updatedAddon;
   },
   
+  async deleteAddon(id: number) {
+    // Check if addon is used in any inspections
+    const addonUsage = await db.query.inspectionAddons.findMany({
+      where: eq(schema.inspectionAddons.addonId, id)
+    });
+    
+    if (addonUsage.length > 0) {
+      // If addon is used, just mark it as inactive instead of deleting
+      const [updatedAddon] = await db.update(schema.addons)
+        .set({ isActive: false })
+        .where(eq(schema.addons.id, id))
+        .returning();
+      return updatedAddon;
+    } else {
+      // If addon is not used, we can safely delete it
+      const [deletedAddon] = await db.delete(schema.addons)
+        .where(eq(schema.addons.id, id))
+        .returning();
+      return deletedAddon;
+    }
+  },
+  
   // ===== Inspection Add-ons =====
   async getInspectionAddons(inspectionId: number) {
     return db.query.inspectionAddons.findMany({
