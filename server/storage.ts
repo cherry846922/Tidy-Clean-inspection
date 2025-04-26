@@ -52,6 +52,29 @@ export const storage = {
     return updatedProperty;
   },
   
+  async updatePropertyHealthScore(id: number, score: number) {
+    const [updatedProperty] = await db.update(schema.properties)
+      .set({
+        healthScore: score,
+        lastHealthCheck: new Date()
+      })
+      .where(eq(schema.properties.id, id))
+      .returning();
+    return updatedProperty;
+  },
+  
+  async getPropertyHealthScore(id: number) {
+    const property = await db.query.properties.findFirst({
+      where: eq(schema.properties.id, id),
+      columns: {
+        id: true,
+        healthScore: true,
+        lastHealthCheck: true
+      }
+    });
+    return property;
+  },
+  
   // Cleaners
   async getAllCleaners() {
     return db.query.cleaners.findMany({

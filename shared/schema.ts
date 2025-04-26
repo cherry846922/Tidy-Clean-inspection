@@ -42,6 +42,8 @@ export const properties = pgTable("properties", {
   type: text("type").notNull(),
   bedrooms: integer("bedrooms").notNull().default(1),
   bathrooms: real("bathrooms").notNull().default(1),
+  healthScore: integer("health_score"),
+  lastHealthCheck: timestamp("last_health_check"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -162,6 +164,30 @@ export const updatePaymentStatusSchema = z.object({
 });
 
 export type UpdatePaymentStatus = z.infer<typeof updatePaymentStatusSchema>;
+
+// Property health score schema
+export const generateHealthScoreSchema = z.object({
+  propertyId: z.number({
+    required_error: "Property ID is required",
+    invalid_type_error: "Property ID must be a number"
+  }).positive(),
+});
+
+export type GenerateHealthScore = z.infer<typeof generateHealthScoreSchema>;
+
+export const healthScoreResponseSchema = z.object({
+  propertyId: z.number(),
+  score: z.number().min(0).max(100),
+  lastChecked: z.date(),
+  details: z.object({
+    cleanliness: z.number().min(0).max(100),
+    maintenance: z.number().min(0).max(100),
+    amenities: z.number().min(0).max(100),
+    safety: z.number().min(0).max(100),
+  }).optional(),
+});
+
+export type HealthScoreResponse = z.infer<typeof healthScoreResponseSchema>;
 
 // Add-ons (items like lightbulbs, batteries that can be added to inspections)
 export const addons = pgTable("addons", {
