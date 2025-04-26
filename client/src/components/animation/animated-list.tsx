@@ -4,9 +4,9 @@ import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useAnimation } from "@/contexts/animation-context";
 import { cn } from "@/lib/utils";
 
-interface AnimatedListProps {
-  items: any[];
-  renderItem: (item: any, index: number) => React.ReactNode;
+interface AnimatedListProps<T = any> {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
   className?: string;
   itemClassName?: string;
   emptyState?: React.ReactNode;
@@ -100,11 +100,9 @@ export function AnimatedList({
       }
     : { ...staggerItem };
 
-  // Create motion container with appropriate HTML tag
-  const Container = motion[containerTag as keyof typeof motion];
-  
-  return (
-    <Container
+  // Use motion.div or motion.ul directly instead of dynamic component
+  return containerTag === 'ul' ? (
+    <motion.ul
       initial="hidden"
       animate="visible"
       variants={variants}
@@ -119,6 +117,23 @@ export function AnimatedList({
           {renderItem(item, index)}
         </motion.li>
       ))}
-    </Container>
+    </motion.ul>
+  ) : (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={variants}
+      className={className}
+    >
+      {items.map((item, index) => (
+        <motion.div
+          key={item.id || index}
+          variants={itemVariants}
+          className={itemClassName}
+        >
+          {renderItem(item, index)}
+        </motion.div>
+      ))}
+    </motion.div>
   );
 }
