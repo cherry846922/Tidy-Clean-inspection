@@ -14,32 +14,47 @@ import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import Reports from "@/pages/Reports";
 import PricingManagement from "@/pages/admin/PricingManagement";
+import AnimationDemo from "@/pages/AnimationDemo";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import { useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AnimationProvider } from "@/contexts/animation-context";
+import { PageWrapper } from "@/components/animation/PageWrapper";
 
 function Router() {
   const [location] = useLocation();
   const isAuthPage = location === '/auth';
   
+  // Create wrapped versions of components with page transitions
+  const renderWithAnimation = (Component: React.ComponentType) => {
+    const WrappedComponent = () => {
+      return (
+        <PageWrapper>
+          <Component />
+        </PageWrapper>
+      );
+    };
+    return WrappedComponent;
+  };
+  
   return (
     <Switch>
-      <ProtectedRoute path="/" component={Calendar} />
-      <ProtectedRoute path="/calendar" component={Calendar} />
-      <ProtectedRoute path="/dashboard" component={Dashboard} />
-      <ProtectedRoute path="/inspections" component={Inspections} />
-      <ProtectedRoute path="/properties" component={Properties} />
-      <ProtectedRoute path="/price/:id" component={PricePage} />
-      <ProtectedRoute path="/checkout/:id" component={Checkout} />
-      <ProtectedRoute path="/products" component={Products} />
-      <ProtectedRoute path="/reports" component={Reports} />
-      <ProtectedRoute path="/admin/pricing" component={PricingManagement} />
-      <ProtectedRoute path="/profile" component={Profile} />
-      <Route path="/auth" component={AuthPage} />
-      <Route component={NotFound} />
+      <ProtectedRoute path="/" component={renderWithAnimation(Calendar)} />
+      <ProtectedRoute path="/calendar" component={renderWithAnimation(Calendar)} />
+      <ProtectedRoute path="/dashboard" component={renderWithAnimation(Dashboard)} />
+      <ProtectedRoute path="/inspections" component={renderWithAnimation(Inspections)} />
+      <ProtectedRoute path="/properties" component={renderWithAnimation(Properties)} />
+      <ProtectedRoute path="/price/:id" component={renderWithAnimation(PricePage)} />
+      <ProtectedRoute path="/checkout/:id" component={renderWithAnimation(Checkout)} />
+      <ProtectedRoute path="/products" component={renderWithAnimation(Products)} />
+      <ProtectedRoute path="/reports" component={renderWithAnimation(Reports)} />
+      <ProtectedRoute path="/admin/pricing" component={renderWithAnimation(PricingManagement)} />
+      <ProtectedRoute path="/profile" component={renderWithAnimation(Profile)} />
+      <ProtectedRoute path="/animation-demo" component={renderWithAnimation(AnimationDemo)} />
+      <Route path="/auth" component={renderWithAnimation(AuthPage)} />
+      <Route component={renderWithAnimation(NotFound)} />
     </Switch>
   );
 }
