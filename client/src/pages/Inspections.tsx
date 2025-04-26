@@ -1,52 +1,68 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import FilterBar, { FilterValues } from "@/components/FilterBar";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import InspectionCard from "@/components/InspectionCard";
 import NewInspectionModal from "@/components/NewInspectionModal";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Calendar, Home } from "lucide-react";
-import type { Inspection, Property } from "@shared/schema";
-import { useAuth } from "@/hooks/use-auth";
+import FilterBar, { FilterValues } from "@/components/FilterBar";
 
 export default function Inspections() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [isNewInspectionModalOpen, setIsNewInspectionModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [filters, setFilters] = useState<FilterValues>({
     propertyId: "all",
-    dateRange: "this-month",
-    status: "all"
+    dateRange: "all",
+    status: "all",
   });
   
-  const [activeTab, setActiveTab] = useState("upcoming");
-  const { user } = useAuth();
+  // Check if user is an inspector or host
   const isInspector = user?.role === "inspector";
   const isHost = user?.role === "host";
   
-  const { data: inspections, isLoading } = useQuery<Inspection[]>({
-    queryKey: [
-      '/api/inspections',
-      {
-        status: activeTab === "upcoming" ? "scheduled" : 
-                activeTab === "completed" ? "completed" : 
-                activeTab === "cancelled" ? "cancelled" : undefined,
-        ...(filters.propertyId !== "all" ? { propertyId: filters.propertyId } : {})
-      }
-    ],
+  // Query inspections based on filters and active tab
+  const inspectionStatus = activeTab !== "all" ? activeTab : undefined;
+  
+  const { data: inspections, isLoading } = useQuery({
+    queryKey: ['/api/inspections', { 
+      status: inspectionStatus,
+      propertyId: filters.propertyId !== "all" ? filters.propertyId : undefined,
+      dateRange: filters.dateRange !== "all" ? filters.dateRange : undefined
+    }],
+    enabled: !!user,
   });
   
   const handleFilterChange = (newFilters: FilterValues) => {
     setFilters(newFilters);
   };
+
+  // If user is a host, don't render the page at all
+  if (isHost) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-[#2D3748] mb-2">Host View</h1>
+          <p className="text-[#767676]">Hosts don't have access to the Inspections page.</p>
+          <p className="text-[#767676] mt-2">Please go to the Dashboard or Calendar view.</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
-    <div className="p-4 md:p-8 pb-20 md:pb-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-[#F8F9FA]">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#484848]">Inspections</h1>
+            <h1 className="text-3xl font-bold text-[#2D3748]">Inspections</h1>
             <p className="text-[#767676] mt-1">View and manage all your cleaning inspections</p>
           </div>
           <div className="mt-4 md:mt-0">
@@ -65,23 +81,11 @@ export default function Inspections() {
         {/* Filter Bar */}
         <FilterBar onFilterChange={handleFilterChange} />
         
-        {/* Main Tabs - Inspector gets Inspections tab, Host gets Properties tab */}
-        <Tabs defaultValue={isHost ? "properties" : "inspections"} className="mt-6">
-          <TabsList className="mb-4">
-            {/* Inspections tab only visible to inspectors */}
-            {isInspector && (
-              <TabsTrigger value="inspections">Inspections</TabsTrigger>
-            )}
-            {/* Properties tab only visible to hosts */}
-            {isHost && (
-              <TabsTrigger value="properties">Properties</TabsTrigger>
-            )}
-          </TabsList>
-          
-          {/* Inspections Tab Content */}
-          <TabsContent value="inspections">
+        {/* Inspector View - Only show if user is an inspector */}
+        {isInspector && (
+          <>
             {/* Inspection Status Tabs */}
-            <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab} className="mt-6">
               <TabsList className="mb-4">
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
@@ -185,102 +189,15 @@ export default function Inspections() {
                 )}
               </TabsContent>
             </Tabs>
-          </TabsContent>
-          
-          {/* Properties Tab Content - Only visible to hosts */}
-          {isHost && (
-            <TabsContent value="properties">
-              <div className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Property Cards will be dynamically loaded here */}
-                  <PropertyList />
-                </div>
-              </div>
-            </TabsContent>
-          )}
-        </Tabs>
-        
-        {/* New Inspection Modal */}
-        <NewInspectionModal 
-          isOpen={isNewInspectionModalOpen} 
-          onClose={() => setIsNewInspectionModalOpen(false)} 
-        />
+            
+            {/* New Inspection Modal */}
+            <NewInspectionModal 
+              isOpen={isNewInspectionModalOpen} 
+              onClose={() => setIsNewInspectionModalOpen(false)} 
+            />
+          </>
+        )}
       </div>
     </div>
-  );
-}
-
-// Property List Component for the Properties Tab
-function PropertyList() {
-  interface Property {
-    id: number;
-    name: string;
-    address: string;
-    healthScore?: number;
-    lastInspection?: string;
-  }
-
-  const { data: properties, isLoading } = useQuery<Property[]>({
-    queryKey: ['/api/properties'],
-  });
-
-  if (isLoading) {
-    return (
-      <>
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-48 bg-gray-100 animate-pulse rounded-lg"></div>
-        ))}
-      </>
-    );
-  }
-
-  if (!properties || properties.length === 0) {
-    return (
-      <div className="col-span-full text-center py-12 text-[#767676]">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-        <p>No properties found.</p>
-        <Button variant="outline" className="mt-4">
-          Add Property
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {properties.map((property) => (
-        <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-          <CardHeader className="bg-gradient-to-r from-[#00A6A6] to-[#5BC0EB] text-white">
-            <CardTitle className="text-xl">{property.name}</CardTitle>
-            <CardDescription className="text-white/80">{property.address}</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Health Score</span>
-                <span className="text-sm font-medium">
-                  {property.healthScore ? `${property.healthScore}%` : 'N/A'}
-                </span>
-              </div>
-              <Progress value={property.healthScore || 0} className="h-2" />
-              
-              <div className="flex justify-between text-sm mt-4">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                  <span>Last: {property.lastInspection || 'Never'}</span>
-                </div>
-                <div>
-                  <Button variant="ghost" size="sm" className="text-[#00A6A6] hover:text-[#00A6A6]/80 -mr-2">
-                    View Details
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </>
   );
 }
