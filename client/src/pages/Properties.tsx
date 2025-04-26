@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -261,7 +261,9 @@ export default function Properties() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties'],
@@ -278,6 +280,7 @@ export default function Properties() {
     },
   });
   
+  // Add property form
   const onSubmit = async (values: PropertyFormValues) => {
     try {
       await apiRequest('POST', '/api/properties', values);
@@ -294,6 +297,55 @@ export default function Properties() {
       toast({
         title: "Error adding property",
         description: "There was a problem adding your property. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Edit property form
+  const editForm = useForm<PropertyFormValues>({
+    resolver: zodResolver(propertyFormSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      type: "",
+      bedrooms: 1,
+      bathrooms: 1
+    },
+  });
+  
+  // Set form values when a property is selected for editing
+  useEffect(() => {
+    if (selectedProperty) {
+      editForm.reset({
+        name: selectedProperty.name,
+        address: selectedProperty.address,
+        type: selectedProperty.type || "",
+        bedrooms: selectedProperty.bedrooms,
+        bathrooms: selectedProperty.bathrooms
+      });
+    }
+  }, [selectedProperty, editForm]);
+  
+  // Handle property edit submission
+  const onEditSubmit = async (values: PropertyFormValues) => {
+    if (!selectedProperty) return;
+    
+    try {
+      await apiRequest('PATCH', `/api/properties/${selectedProperty.id}`, values);
+      await queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+      
+      setIsEditDialogOpen(false);
+      setSelectedProperty(null);
+      
+      toast({
+        title: "Property updated",
+        description: "Your property has been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error updating property",
+        description: "There was a problem updating your property. Please try again.",
         variant: "destructive",
       });
     }
@@ -454,13 +506,27 @@ export default function Properties() {
                       <MessageSquare className="h-4 w-4 mr-1" />
                       Get Feedback
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProperty(property);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm" className="text-[#FF5A5F]">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-[#FF5A5F]"
+                      onClick={() => {
+                        window.location.href = `/calendar?propertyId=${property.id}`;
+                      }}
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -493,6 +559,94 @@ export default function Properties() {
           setOpen={setIsFeedbackDialogOpen}
           initialPropertyId={selectedPropertyId}
         />
+        
+        {/* Property Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Property</DialogTitle>
+              <DialogDescription>
+                Update your property details
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4 py-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Seaside Villa" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 123 Beach Road" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Apartment, Villa, Cabin" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="bedrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bedrooms</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bathrooms</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0.5" step="0.5" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white">
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

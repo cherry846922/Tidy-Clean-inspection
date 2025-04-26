@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CalendarView from "@/components/CalendarView";
 import DayDetail from "@/components/DayDetail";
 import FilterBar, { FilterValues } from "@/components/FilterBar";
@@ -9,11 +9,35 @@ import { Button } from "@/components/ui/button";
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewInspectionModalOpen, setIsNewInspectionModalOpen] = useState(false);
+  
+  // Parse URL parameters
+  const getInitialPropertyId = () => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const propertyId = params.get("propertyId");
+      return propertyId || "all";
+    }
+    return "all";
+  };
+  
   const [filters, setFilters] = useState<FilterValues>({
-    propertyId: "all",
+    propertyId: getInitialPropertyId(),
     dateRange: "this-month",
     status: "all"
   });
+  
+  // Update URL when filters change
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    
+    if (filters.propertyId !== "all") {
+      url.searchParams.set("propertyId", filters.propertyId);
+    } else {
+      url.searchParams.delete("propertyId");
+    }
+    
+    window.history.replaceState({}, "", url.toString());
+  }, [filters.propertyId]);
   
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);

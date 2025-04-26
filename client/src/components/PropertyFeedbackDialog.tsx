@@ -34,6 +34,7 @@ interface ImprovementSuggestion {
   issue: string;
   suggestion: string;
   priority: "high" | "medium" | "low";
+  userNotes?: string;
 }
 
 export default function PropertyFeedbackDialog({
@@ -191,6 +192,26 @@ export default function PropertyFeedbackDialog({
                   <p className="mt-2 text-sm text-gray-600">
                     <span className="font-medium">Suggestion:</span> {suggestion.suggestion}
                   </p>
+                  
+                  {/* User Notes Section */}
+                  <div className="mt-3 border-t border-gray-100 pt-2">
+                    <Label htmlFor={`notes-${index}`} className="text-xs font-medium text-gray-700">Your Notes</Label>
+                    <textarea
+                      id={`notes-${index}`}
+                      className="mt-1 w-full text-sm p-2 border border-gray-200 rounded-md h-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Add your own notes about this suggestion..."
+                      value={suggestion.userNotes || ""}
+                      onChange={(e) => {
+                        const updatedSuggestions = [...suggestions];
+                        updatedSuggestions[index] = {
+                          ...suggestion,
+                          userNotes: e.target.value
+                        };
+                        setSuggestions(updatedSuggestions);
+                      }}
+                    />
+                  </div>
+                  
                   <div className="mt-2 flex items-center">
                     <div className="flex items-center text-xs font-medium">
                       <AlertTriangle className={`h-3 w-3 mr-1 
