@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import PropertySelect from "@/components/PropertySelect";
 import { Calendar } from "@/components/ui/calendar";
@@ -100,6 +101,7 @@ export default function Reports() {
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [reportType, setReportType] = useState<string>("inspections");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string>("");
   const [checklist, setChecklist] = useState<Array<{id: string, text: string, checked: boolean}>>([
     { id: "1", text: "Inspect bathroom cleanliness", checked: false },
     { id: "2", text: "Check kitchen appliances", checked: false },
@@ -409,6 +411,20 @@ export default function Reports() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="report-notes">Notes</Label>
+                    <Textarea 
+                      id="report-notes"
+                      placeholder="Add detailed notes about this report..."
+                      className="mt-1 min-h-[100px]"
+                      value={notes}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Add important observations, conclusions, or action items here
+                    </p>
                   </div>
                   
                   <div>
