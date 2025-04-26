@@ -261,6 +261,7 @@ export default function Properties() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties'],
@@ -445,7 +446,10 @@ export default function Properties() {
                       variant="outline" 
                       size="sm" 
                       className="text-purple-600"
-                      onClick={() => setIsFeedbackDialogOpen(true)}
+                      onClick={() => {
+                        setSelectedPropertyId(property.id.toString());
+                        setIsFeedbackDialogOpen(true);
+                      }}
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
                       Get Feedback

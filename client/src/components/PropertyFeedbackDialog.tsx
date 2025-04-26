@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -25,6 +25,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 interface PropertyFeedbackDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  initialPropertyId?: string;
 }
 
 interface ImprovementSuggestion {
@@ -38,11 +39,27 @@ interface ImprovementSuggestion {
 export default function PropertyFeedbackDialog({
   open,
   setOpen,
+  initialPropertyId = "",
 }: PropertyFeedbackDialogProps) {
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(initialPropertyId);
   const [suggestions, setSuggestions] = useState<ImprovementSuggestion[]>([]);
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
+  
+  // Update selectedPropertyId when initialPropertyId changes
+  useEffect(() => {
+    if (initialPropertyId && initialPropertyId !== selectedPropertyId) {
+      setSelectedPropertyId(initialPropertyId);
+      setSuggestions([]);
+    }
+  }, [initialPropertyId, selectedPropertyId]);
+  
+  // Auto-generate feedback when dialog opens with a propertyId
+  useEffect(() => {
+    if (open && selectedPropertyId && suggestions.length === 0 && !processing) {
+      generateFeedbackMutation.mutate(parseInt(selectedPropertyId));
+    }
+  }, [open, selectedPropertyId, suggestions.length, processing]);
 
   // Fetch properties
   const { data: properties, isLoading: loadingProperties } = useQuery<Property[]>({
