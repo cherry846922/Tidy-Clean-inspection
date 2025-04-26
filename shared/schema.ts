@@ -315,5 +315,31 @@ export const checklistData = z.object({
 
 export type ChecklistData = z.infer<typeof checklistData>;
 
+// Notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // 'payment_required', 'property_updated', 'inspection_completed', etc.
+  relatedId: integer("related_id"), // ID of the related entity (inspection, property, etc.)
+  relatedType: text("related_type"), // 'inspection', 'property', etc.
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
+
+export const insertNotificationSchema = createInsertSchema(notifications, {
+  title: (schema) => schema.min(1, "Title is required"),
+  message: (schema) => schema.min(1, "Message is required"),
+  type: (schema) => schema.min(1, "Type is required"),
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
 export type FeedbackSuggestion = z.infer<typeof feedbackSuggestionSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;
