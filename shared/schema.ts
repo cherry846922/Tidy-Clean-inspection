@@ -238,3 +238,21 @@ export const insertInspectionAddonSchema = createInsertSchema(inspectionAddons, 
 
 export type InsertInspectionAddon = z.infer<typeof insertInspectionAddonSchema>;
 export type InspectionAddon = typeof inspectionAddons.$inferSelect;
+
+// Property feedback and suggestion schemas
+export const feedbackSuggestionSchema = z.object({
+  category: z.string(),
+  score: z.number(),
+  issue: z.string(),
+  suggestion: z.string(),
+  priority: z.enum(["high", "medium", "low"])
+});
+
+export const feedbackResponseSchema = z.object({
+  propertyId: z.number(),
+  propertyName: z.string(),
+  suggestions: z.array(feedbackSuggestionSchema)
+});
+
+export type FeedbackSuggestion = z.infer<typeof feedbackSuggestionSchema>;
+export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;

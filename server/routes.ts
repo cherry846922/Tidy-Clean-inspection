@@ -839,6 +839,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to retrieve health score" });
     }
   });
+  
+  // Generate property improvement suggestions and feedback
+  app.get(`${apiPrefix}/properties/:id/feedback-suggestions`, requireAuth, async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      // Get property details
+      const property = await storage.getPropertyById(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      // Get property health score
+      const healthScore = await storage.getPropertyHealthScore(propertyId);
+      
+      // Get property's inspections to analyze trends and issues
+      const inspections = await storage.getAllInspections({ propertyId });
+      
+      // Generate suggestions based on property data
+      // In a real app, this might use machine learning or analysis of inspection history
+      // For demo purposes, we'll generate some example suggestions
+      
+      const suggestions: schema.FeedbackSuggestion[] = [];
+      
+      // Check for health score and generate suggestions based on score categories
+      if (healthScore?.healthScore) {
+        // Generate cleanliness suggestions
+        if (Math.random() > 0.5) {
+          const cleanlinessScore = Math.floor(Math.random() * 40) + 60;
+          suggestions.push({
+            category: "Cleanliness",
+            score: cleanlinessScore,
+            issue: cleanlinessScore < 80 ? "Bathroom cleaning standards need improvement" : "Minor dust accumulation in hard-to-reach areas",
+            suggestion: cleanlinessScore < 80 
+              ? "Implement a detailed bathroom cleaning checklist for cleaners with special attention to grout and corners" 
+              : "Consider quarterly deep cleaning for crown molding and ceiling fans",
+            priority: cleanlinessScore < 70 ? "high" : cleanlinessScore < 85 ? "medium" : "low"
+          });
+        }
+        
+        // Generate maintenance suggestions
+        if (Math.random() > 0.4) {
+          const maintenanceScore = Math.floor(Math.random() * 40) + 60;
+          suggestions.push({
+            category: "Maintenance",
+            score: maintenanceScore,
+            issue: maintenanceScore < 75 ? "Multiple fixtures showing signs of wear" : "Minor paint touch-ups needed in common areas",
+            suggestion: maintenanceScore < 75 
+              ? "Schedule quarterly maintenance checks for all plumbing fixtures and address any issues immediately" 
+              : "Refresh paint in high-traffic areas to maintain a clean appearance",
+            priority: maintenanceScore < 70 ? "high" : maintenanceScore < 85 ? "medium" : "low"
+          });
+        }
+        
+        // Generate amenities suggestions
+        if (Math.random() > 0.6) {
+          const amenitiesScore = Math.floor(Math.random() * 30) + 70;
+          suggestions.push({
+            category: "Amenities",
+            score: amenitiesScore,
+            issue: "Guest feedback indicates desire for better kitchen supplies",
+            suggestion: "Consider upgrading kitchen utensils and adding a quality coffee maker to enhance guest experience",
+            priority: amenitiesScore < 75 ? "medium" : "low"
+          });
+        }
+        
+        // Generate safety suggestions
+        if (Math.random() > 0.7) {
+          const safetyScore = Math.floor(Math.random() * 25) + 75;
+          suggestions.push({
+            category: "Safety",
+            score: safetyScore,
+            issue: safetyScore < 85 ? "Smoke detectors need battery replacement" : "Emergency information not prominently displayed",
+            suggestion: safetyScore < 85 
+              ? "Implement a monthly smoke detector check protocol and replace batteries immediately when needed" 
+              : "Create and display an emergency contact card in a visible location",
+            priority: safetyScore < 85 ? "high" : "medium"
+          });
+        }
+      }
+      
+      // Check recent inspections for recurring issues
+      if (inspections.length > 0) {
+        // Analyze inspection history (simplified for demo)
+        const completedInspections = inspections.filter(i => i.status === 'completed');
+        const hasRecurringIssues = completedInspections.length > 2 && Math.random() > 0.6;
+        
+        if (hasRecurringIssues) {
+          suggestions.push({
+            category: "Recurring Issues",
+            score: 65,
+            issue: "Multiple inspections have noted the same cleaning issues in the kitchen area",
+            suggestion: "Consider a specialized deep clean for kitchen, focusing on appliances and behind/under cabinets",
+            priority: "medium"
+          });
+        }
+      }
+      
+      // Add a suggestion based on property type/location (for demo)
+      if (property.type === "house" || !property.type) {
+        suggestions.push({
+          category: "Guest Experience",
+          score: 82,
+          issue: "Property lacks personal touches that guests appreciate",
+          suggestion: "Add location-specific guidebooks, local artwork, or welcome amenities to create a more memorable stay",
+          priority: "low"
+        });
+      }
+      
+      // Sort suggestions by priority: high, medium, low
+      const sortedSuggestions = suggestions.sort((a, b) => {
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
+      });
+      
+      // Return the feedback response
+      res.json({
+        propertyId,
+        propertyName: property.name,
+        suggestions: sortedSuggestions
+      });
+      
+    } catch (error) {
+      console.error("Error generating feedback suggestions:", error);
+      res.status(500).json({ message: "Failed to generate feedback suggestions" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

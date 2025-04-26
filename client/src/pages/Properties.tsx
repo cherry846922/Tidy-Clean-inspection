@@ -14,7 +14,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import type { Property } from "@shared/schema";
-import { Loader2, Activity, Calendar, Home, Shield, Sparkles, SparkleIcon } from "lucide-react";
+import { Loader2, Activity, Calendar, Home, Shield, Sparkles, SparkleIcon, MessageSquare } from "lucide-react";
+import PropertyFeedbackDialog from "@/components/PropertyFeedbackDialog";
 
 const propertyFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
