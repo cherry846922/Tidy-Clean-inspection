@@ -228,101 +228,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             Help
           </Link>
           
-          {/* Debug User Role Switcher */}
+          {/* Role Switcher Link */}
           <div className="mt-3 space-y-2">
             <p className="text-xs text-gray-500 px-3">Debug Controls:</p>
-            <div className="flex justify-between space-x-2 px-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs w-1/2 border-blue-400 text-blue-500 hover:bg-blue-50"
-                onClick={async () => {
-                  try {
-                    console.log("Switching to host role...");
-                    // First logout
-                    await apiRequest("POST", "/api/logout");
-                    
-                    // Small delay to ensure logout is processed
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    // Then login as host
-                    const res = await apiRequest("POST", "/api/login", { 
-                      username: "HostDemo", 
-                      password: "password123"
-                    });
-                    
-                    if (res.ok) {
-                      console.log("Host login successful");
-                      // Invalidate the user query cache
-                      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-                      // Force reload the page
-                      window.location.href = '/dashboard';
-                    } else {
-                      console.error("Host login failed:", await res.text());
-                      toast({
-                        title: "Login Failed",
-                        description: "Could not switch to Host role",
-                        variant: "destructive"
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Host login error:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to switch roles",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              >
-                Login as Host
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs w-1/2 border-green-400 text-green-500 hover:bg-green-50"
-                onClick={async () => {
-                  try {
-                    console.log("Switching to inspector role...");
-                    // First logout
-                    await apiRequest("POST", "/api/logout");
-                    
-                    // Small delay to ensure logout is processed
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    // Then login as inspector
-                    const res = await apiRequest("POST", "/api/login", { 
-                      username: "Cherry84", 
-                      password: "password123"
-                    });
-                    
-                    if (res.ok) {
-                      console.log("Inspector login successful");
-                      // Invalidate the user query cache
-                      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-                      // Force reload the page
-                      window.location.href = '/dashboard';
-                    } else {
-                      console.error("Inspector login failed:", await res.text());
-                      toast({
-                        title: "Login Failed",
-                        description: "Could not switch to Inspector role",
-                        variant: "destructive"
-                      });
-                    }
-                  } catch (error) {
-                    console.error("Inspector login error:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to switch roles",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-              >
-                Login as Inspector
-              </Button>
-            </div>
+            <Link href="/switch-role" 
+              className="flex items-center p-3 text-[#484848] rounded-lg font-medium hover:bg-gray-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-[#767676]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Switch User Role
+            </Link>
           </div>
           
           <LogoutButton />

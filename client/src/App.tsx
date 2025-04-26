@@ -16,6 +16,7 @@ import Reports from "@/pages/Reports";
 import PricingManagement from "@/pages/admin/PricingManagement";
 import PropertyOptimization from "@/pages/PropertyOptimization";
 import AnimationDemo from "@/pages/AnimationDemo";
+import SwitchRole from "@/pages/SwitchRole";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import React, { useState, useEffect } from "react";
@@ -26,7 +27,7 @@ import { PageWrapper } from "@/components/animation/PageWrapper";
 
 function Router() {
   const [location] = useLocation();
-  const isAuthPage = location === '/auth';
+  const isSpecialPage = location === '/auth' || location === '/switch-role';
   
   // Create wrapped versions of components with page transitions
   const renderWithAnimation = (Component: React.ComponentType) => {
@@ -64,6 +65,7 @@ function Router() {
       <ProtectedRoute path="/admin/pricing" component={renderWithAnimation(PricingManagement)} />
       <ProtectedRoute path="/profile" component={renderWithAnimation(Profile)} />
       <ProtectedRoute path="/animation-demo" component={renderWithAnimation(AnimationDemo)} />
+      <Route path="/switch-role" component={renderWithAnimation(SwitchRole)} />
       <Route path="/auth" component={renderWithAnimation(AuthPage)} />
       <Route component={renderWithAnimation(NotFound)} />
     </Switch>
@@ -75,10 +77,10 @@ function AppContent() {
   const [location] = useLocation();
   const { user } = useAuth();
   
-  // Don't show sidebar/header on auth page
-  const isAuthPage = location === '/auth';
+  // Don't show sidebar/header on auth or switch-role pages
+  const isSpecialPage = location === '/auth' || location === '/switch-role';
   
-  if (isAuthPage) {
+  if (isSpecialPage) {
     return (
       <main className="flex-1">
         <Router />
