@@ -634,6 +634,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Host dashboard endpoints
+  app.get(`${apiPrefix}/dashboard/host`, requireAuth, async (req, res) => {
+    try {
+      // Get user ID from authenticated session
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Get current date for calculations
+      const today = new Date();
+      
+      // Get properties belonging to this host
+      const userProperties = await storage.getAllProperties();
+      
+      // Get all inspections for the host's properties
+      const allInspections = await Promise.all(
+        userProperties.map(async (property) => {
+          const inspections = await storage.getAllInspections({ propertyId: property.id });
+          return inspections;
+        })
+      );
+      
+      // Flatten inspections array
+      const inspections = allInspections.flat();
+      
+      // Calculate basic metrics
+      const totalInspections = inspections.length;
+      const completedInspections = inspections.filter(i => i.status === 'completed').length;
+      const scheduledInspections = inspections.filter(i => i.status === 'scheduled').length;
+      const cancelledInspections = inspections.filter(i => i.status === 'cancelled').length;
+      
+      // Calculate completion rate
+      const completionRate = totalInspections > 0 
+        ? Math.round((completedInspections / totalInspections) * 100) 
+        : 0;
+      
+      // Get upcoming inspections (next 7 days)
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      const upcomingInspections = inspections.filter(i => {
+        const inspectionDate = new Date(i.date);
+        return i.status === 'scheduled' && 
+               inspectionDate >= today && 
+               inspectionDate <= nextWeek;
+      });
+      
+      // Calculate average health score across properties with scores
+      const propertiesWithScore = userProperties.filter(p => p.healthScore !== null && p.healthScore !== undefined);
+      const avgHealthScore = propertiesWithScore.length > 0
+        ? Math.round(propertiesWithScore.reduce((sum, p) => sum + (p.healthScore || 0), 0) / propertiesWithScore.length)
+        : null;
+      
+      // Get monthly inspection counts for charts (last 6 months)
+      const monthlyData = [];
+      for (let i = 5; i >= 0; i--) {
+        const month = new Date(today);
+        month.setMonth(month.getMonth() - i);
+        const monthName = month.toLocaleString('default', { month: 'short' });
+        const monthYear = month.toLocaleString('default', { month: 'short', year: '2-digit' });
+        const startDate = new Date(month.getFullYear(), month.getMonth(), 1);
+        const endDate = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+        
+        const monthCompletedCount = inspections.filter(i => {
+          const inspDate = new Date(i.date);
+          return i.status === 'completed' && 
+                 inspDate >= startDate && 
+                 inspDate <= endDate;
+        }).length;
+        
+        const monthScheduledCount = inspections.filter(i => {
+          const inspDate = new Date(i.date);
+          return i.status === 'scheduled' && 
+                 inspDate >= startDate && 
+                 inspDate <= endDate;
+        }).length;
+        
+        monthlyData.push({
+          month: monthName,
+          label: monthYear,
+          completed: monthCompletedCount,
+          scheduled: monthScheduledCount
+        });
+      }
+      
+      // Get property performance for comparison
+      const propertyPerformance = userProperties.map(property => {
+        const propertyInspections = inspections.filter(i => i.propertyId === property.id);
+        const completedCount = propertyInspections.filter(i => i.status === 'completed').length;
+        const cancelledCount = propertyInspections.filter(i => i.status === 'cancelled').length;
+        const totalCount = propertyInspections.length;
+        
+        return {
+          id: property.id,
+          name: property.name,
+          healthScore: property.healthScore || 0,
+          completionRate: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+          inspectionCount: totalCount
+        };
+      });
+      
+      res.json({
+        summary: {
+          properties: userProperties.length,
+          totalInspections,
+          completedInspections,
+          scheduledInspections,
+          cancelledInspections,
+          completionRate,
+          avgHealthScore
+        },
+        upcomingInspections,
+        monthlyData,
+        propertyPerformance
+      });
+      
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard data" });
+    }
+  });
+
   // Property health score endpoints
   app.post(`${apiPrefix}/properties/health-score`, requireAuth, async (req, res) => {
     try {

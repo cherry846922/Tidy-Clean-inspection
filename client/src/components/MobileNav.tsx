@@ -7,6 +7,14 @@ export default function MobileNav() {
   
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 z-10">
+      <Link href="/dashboard" 
+        className={`flex flex-col items-center p-2 ${isActive('/dashboard') ? 'text-primary' : 'text-[#767676]'}`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span className="text-xs mt-1">Dashboard</span>
+      </Link>
       <Link href="/" 
         className={`flex flex-col items-center p-2 ${isActive('/') ? 'text-primary' : 'text-[#767676]'}`}
       >

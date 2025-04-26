@@ -80,6 +80,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             <li>
+              <Link href="/dashboard" 
+                className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/dashboard') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${isActive('/dashboard') ? 'text-primary' : 'text-[#767676]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Dashboard
+              </Link>
+            </li>
+            <li>
               <Link href="/" 
                 className={`flex items-center p-3 text-[#484848] rounded-lg font-medium ${isActive('/') ? 'bg-[#EBEBEB]' : 'hover:bg-gray-100'}`}
               >

@@ -10,6 +10,7 @@ import PricePage from "@/pages/PricePage";
 import Checkout from "@/pages/Checkout";
 import AuthPage from "@/pages/auth-page";
 import Profile from "@/pages/profile";
+import Dashboard from "@/pages/Dashboard";
 import PricingManagement from "@/pages/admin/PricingManagement";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
@@ -24,6 +25,7 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Calendar} />
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/inspections" component={Inspections} />
       <ProtectedRoute path="/properties" component={Properties} />
       <ProtectedRoute path="/price/:id" component={PricePage} />
