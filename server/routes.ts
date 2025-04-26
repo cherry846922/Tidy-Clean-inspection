@@ -634,6 +634,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Property health score endpoints
+  app.post(`${apiPrefix}/properties/health-score`, requireAuth, async (req, res) => {
+    try {
+      const validatedData = schema.generateHealthScoreSchema.parse(req.body);
+      const { propertyId } = validatedData;
+      
+      // Check if property exists
+      const property = await storage.getPropertyById(propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      // Generate a health score based on property data and past inspections
+      // This is a simplified scoring system - in a real app, you might have more sophisticated criteria
+      
+      // For demonstration, generate scores between 60-95
+      const baseScore = Math.floor(Math.random() * 36) + 60;
+      
+      // Calculate sub-scores for different categories
+      const cleanliness = Math.floor(Math.random() * 31) + 70;
+      const maintenance = Math.floor(Math.random() * 41) + 60;
+      const amenities = Math.floor(Math.random() * 21) + 80;
+      const safety = Math.floor(Math.random() * 26) + 75;
+      
+      // Save the health score to the property
+      await storage.updatePropertyHealthScore(propertyId, baseScore);
+      
+      // Return the score details
+      res.json({
+        propertyId,
+        score: baseScore,
+        lastChecked: new Date(),
+        details: {
+          cleanliness,
+          maintenance,
+          amenities,
+          safety
+        }
+      });
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error generating health score:", error);
+      res.status(500).json({ message: "Failed to generate health score" });
+    }
+  });
+  
+  // Get property health score
+  app.get(`${apiPrefix}/properties/:id/health-score`, async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+      
+      const propertyInfo = await storage.getPropertyHealthScore(propertyId);
+      
+      if (!propertyInfo) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+      
+      if (!propertyInfo.healthScore) {
+        return res.status(404).json({ 
+          message: "No health score available",
+          detail: "Generate a health score first"
+        });
+      }
+      
+      res.json({
+        propertyId: propertyInfo.id,
+        score: propertyInfo.healthScore,
+        lastChecked: propertyInfo.lastHealthCheck
+      });
+      
+    } catch (error) {
+      console.error("Error retrieving health score:", error);
+      res.status(500).json({ message: "Failed to retrieve health score" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
