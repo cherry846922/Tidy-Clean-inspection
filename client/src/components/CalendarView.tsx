@@ -108,8 +108,8 @@ export default function CalendarView({ selectedDate, onDateChange, propertyFilte
             <div 
               key={index}
               className={`calendar-day aspect-square p-1 border-t border-l border-gray-200 relative ${
-                isSelected ? 'active' : ''
-              }`}
+                isSelected ? 'bg-blue-50' : ''
+              } cursor-pointer hover:bg-gray-50`}
               onClick={() => handleDayClick(day.date)}
             >
               <div className="h-full flex flex-col">
@@ -120,11 +120,15 @@ export default function CalendarView({ selectedDate, onDateChange, propertyFilte
                   {dayInspections.slice(0, 2).map((inspection) => (
                     <div 
                       key={inspection.id}
-                      className={`rounded-sm text-xs px-1 py-0.5 ${
+                      className={`rounded-sm text-xs px-1 py-0.5 truncate ${
                         isSelected 
                           ? 'bg-white bg-opacity-80 text-[#484848]' 
-                          : `bg-${inspection.status === 'scheduled' ? '[#FFB400]' : inspection.status === 'completed' ? '[#00A699]' : '[#FF5A5F]'} text-white`
-                      } truncate`}
+                          : inspection.status === 'scheduled' 
+                            ? 'bg-[#FFB400] text-white'
+                            : inspection.status === 'completed'
+                              ? 'bg-[#00A699] text-white'
+                              : 'bg-[#FF5A5F] text-white'
+                      }`}
                       title={`${inspection.property.name} - ${new Date(inspection.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
                     >
                       {getPropertyAbbreviation(inspection.property.name)} {new Date(inspection.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}

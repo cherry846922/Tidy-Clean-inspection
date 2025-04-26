@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Status } from "@/lib/utils";
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterValues) => void;
+  initialFilters?: Partial<FilterValues>;
 }
 
 export interface FilterValues {
@@ -15,12 +16,28 @@ export interface FilterValues {
   status: Status | "all";
 }
 
-export default function FilterBar({ onFilterChange }: FilterBarProps) {
+export default function FilterBar({ onFilterChange, initialFilters = {} }: FilterBarProps) {
+  // Get initial propertyId from URL if present
+  const getInitialPropertyId = () => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const propertyId = params.get("propertyId");
+      return propertyId || initialFilters.propertyId || "all";
+    }
+    return initialFilters.propertyId || "all";
+  };
+  
   const [filters, setFilters] = useState<FilterValues>({
-    propertyId: "all",
-    dateRange: "this-month",
-    status: "all"
+    propertyId: getInitialPropertyId(),
+    dateRange: initialFilters.dateRange || "this-month",
+    status: initialFilters.status || "all"
   });
+  
+  // Apply initial filters on component mount
+  useEffect(() => {
+    // Apply the filters automatically when component mounts
+    onFilterChange(filters);
+  }, []);
 
   const handlePropertyChange = (value: string) => {
     const newFilters = { ...filters, propertyId: value };

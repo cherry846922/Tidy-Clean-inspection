@@ -70,7 +70,7 @@ export default function Calendar() {
         </div>
         
         {/* Filter Bar */}
-        <FilterBar onFilterChange={handleFilterChange} />
+        <FilterBar onFilterChange={handleFilterChange} initialFilters={filters} />
         
         {/* Main Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
