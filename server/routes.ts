@@ -445,6 +445,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete add-on
+  app.delete(`${apiPrefix}/addons/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid add-on ID" });
+      }
+      
+      const addon = await storage.getAddonById(id);
+      if (!addon) {
+        return res.status(404).json({ message: "Add-on not found" });
+      }
+      
+      const result = await storage.deleteAddon(id);
+      if (!result) {
+        return res.status(404).json({ message: "Failed to delete add-on" });
+      }
+      
+      res.json({ 
+        message: "Add-on deleted successfully",
+        addon: result
+      });
+    } catch (error) {
+      console.error("Error deleting add-on:", error);
+      res.status(500).json({ message: "Failed to delete add-on" });
+    }
+  });
+  
   // ===== Inspection Add-ons Routes =====
   
   // Get all add-ons for an inspection
