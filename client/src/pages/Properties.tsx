@@ -363,96 +363,90 @@ export default function Properties() {
   
   // Render property card component
   const renderProperty = (property: Property) => {
-    const header = (
-      <>
-        <CardTitle>{property.name}</CardTitle>
-        <CardDescription>{property.type}</CardDescription>
-      </>
-    );
-    
     return (
-      <AnimatedCard 
-        key={property.id} 
-        variant="hover"
-        header={header}
-        className="overflow-hidden"
-      >
-        <div className="text-sm text-[#767676] space-y-2">
-          <div className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#767676] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>{property.address}</span>
+      <Card key={property.id} className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+        <CardHeader className="pb-2">
+          <CardTitle>{property.name}</CardTitle>
+          <CardDescription>{property.type}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-[#767676] space-y-2">
+            <div className="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#767676] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>{property.address}</span>
+            </div>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#767676]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <span>
+                {property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}, {' '}
+                {property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#767676]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            <span>
-              {property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}, 
-              {property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
-            </span>
+          
+          {/* Health Score Component */}
+          <PropertyHealthScore propertyId={property.id} />
+          
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <AnimatedButton 
+              variant="outline" 
+              size="sm" 
+              className="text-emerald-600"
+              onClick={() => {
+                setSelectedPropertyId(property.id.toString());
+                setIsChecklistDialogOpen(true);
+              }}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Checklist
+            </AnimatedButton>
+            <AnimatedButton 
+              variant="outline" 
+              size="sm" 
+              className="text-purple-600"
+              onClick={() => {
+                setSelectedPropertyId(property.id.toString());
+                setIsFeedbackDialogOpen(true);
+              }}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Get Feedback
+            </AnimatedButton>
+            <AnimatedButton 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setSelectedProperty(property);
+                setIsEditDialogOpen(true);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </AnimatedButton>
+            <AnimatedButton 
+              variant="outline" 
+              size="sm" 
+              className="text-[#FF5A5F]"
+              onClick={() => {
+                // Navigate to calendar with property filter
+                setLocation(`/calendar?propertyId=${property.id}`);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              View Schedule
+            </AnimatedButton>
           </div>
-        </div>
-        
-        {/* Health Score Component */}
-        <PropertyHealthScore propertyId={property.id} />
-        
-        <div className="mt-4 flex flex-wrap justify-end gap-2">
-          <AnimatedButton 
-            variant="outline" 
-            size="sm" 
-            className="text-emerald-600"
-            onClick={() => {
-              setSelectedPropertyId(property.id.toString());
-              setIsChecklistDialogOpen(true);
-            }}
-          >
-            <CheckSquare className="h-4 w-4 mr-1" />
-            Checklist
-          </AnimatedButton>
-          <AnimatedButton 
-            variant="outline" 
-            size="sm" 
-            className="text-purple-600"
-            onClick={() => {
-              setSelectedPropertyId(property.id.toString());
-              setIsFeedbackDialogOpen(true);
-            }}
-          >
-            <MessageSquare className="h-4 w-4 mr-1" />
-            Get Feedback
-          </AnimatedButton>
-          <AnimatedButton 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              setSelectedProperty(property);
-              setIsEditDialogOpen(true);
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit
-          </AnimatedButton>
-          <AnimatedButton 
-            variant="outline" 
-            size="sm" 
-            className="text-[#FF5A5F]"
-            onClick={() => {
-              // Navigate to calendar with property filter
-              setLocation(`/calendar?propertyId=${property.id}`);
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            View Schedule
-          </AnimatedButton>
-        </div>
-      </AnimatedCard>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -572,29 +566,28 @@ export default function Properties() {
               <div className="h-64 bg-gray-100 animate-pulse rounded-lg"></div>
             </div>
           ) : properties && properties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AnimatedList
-                containerTag="div"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                items={properties}
-                renderItem={(property) => renderProperty(property)}
-                emptyState={
-                  <div className="text-center py-12 text-[#767676] col-span-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <p>No properties found.</p>
-                    <AnimatedButton 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setIsAddDialogOpen(true)}
-                    >
-                      Add Your First Property
-                    </AnimatedButton>
-                  </div>
-                }
-              />
-            </div>
+            <AnimatedList
+              containerTag="div"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              items={properties}
+              renderItem={(property) => renderProperty(property)}
+              itemClassName=""
+              emptyState={
+                <div className="text-center py-12 text-[#767676] col-span-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <p>No properties found.</p>
+                  <AnimatedButton 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
+                    Add Your First Property
+                  </AnimatedButton>
+                </div>
+              }
+            />
           ) : (
             <div className="text-center py-12 text-[#767676]">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
