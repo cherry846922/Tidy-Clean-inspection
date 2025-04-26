@@ -271,7 +271,36 @@ export default function Properties() {
   const [isChecklistDialogOpen, setIsChecklistDialogOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [, setLocation] = useLocation();
+  const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
+  const [location, setLocation] = useLocation();
+  
+  // Check for propertyId in URL query params
+  useEffect(() => {
+    // Parse query parameters to check for propertyId
+    const searchParams = new URLSearchParams(location.split('?')[1]);
+    const propertyId = searchParams.get('propertyId');
+    if (propertyId) {
+      setHighlightedPropertyId(propertyId);
+      
+      // Scroll to the highlighted property with a small delay to ensure render
+      setTimeout(() => {
+        const element = document.getElementById(`property-${propertyId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      
+      // Clear the highlight after 3 seconds
+      const timer = setTimeout(() => {
+        setHighlightedPropertyId(null);
+        // Remove the propertyId from the URL without navigating
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
   
   // Fetch properties
   const { data: properties, isLoading } = useQuery<Property[]>({
@@ -363,8 +392,16 @@ export default function Properties() {
   
   // Render property card component
   const renderProperty = (property: Property) => {
+    const isHighlighted = highlightedPropertyId === property.id.toString();
+    
     return (
-      <Card key={property.id} className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <Card 
+        id={`property-${property.id}`}
+        key={property.id} 
+        className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+          isHighlighted ? 'ring-2 ring-primary shadow-lg animate-pulse' : ''
+        }`}
+      >
         <CardHeader className="pb-2">
           <CardTitle>{property.name}</CardTitle>
           <CardDescription>{property.type}</CardDescription>
