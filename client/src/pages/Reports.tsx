@@ -290,18 +290,28 @@ export default function Reports() {
                     
                     {/* Image preview area */}
                     <div className="mt-3 flex gap-2 flex-wrap">
-                      <div className="w-16 h-16 relative rounded-md overflow-hidden border">
-                        <img src="https://placehold.co/100x100/e2e8f0/64748b?text=Sample" alt="Preview" className="w-full h-full object-cover" />
-                        <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                          ×
-                        </button>
-                      </div>
-                      <div className="w-16 h-16 relative rounded-md overflow-hidden border">
-                        <img src="https://placehold.co/100x100/e2e8f0/64748b?text=Sample" alt="Preview" className="w-full h-full object-cover" />
-                        <button className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                          ×
-                        </button>
-                      </div>
+                      {uploadedImages.length > 0 ? (
+                        uploadedImages.map((image, index) => (
+                          <div key={index} className="w-16 h-16 relative rounded-md overflow-hidden border">
+                            <img 
+                              src={image} 
+                              alt={`Uploaded image ${index + 1}`} 
+                              className="w-full h-full object-cover" 
+                            />
+                            <button 
+                              type="button"
+                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                              onClick={() => removeImage(index)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full py-2 text-center text-sm text-gray-500">
+                          No images added yet
+                        </div>
+                      )}
                     </div>
                   </div>
                   
