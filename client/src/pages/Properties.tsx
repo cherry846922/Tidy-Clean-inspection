@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -264,6 +265,7 @@ export default function Properties() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [, setLocation] = useLocation();
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties'],
@@ -524,9 +526,8 @@ export default function Properties() {
                       size="sm" 
                       className="text-[#FF5A5F]"
                       onClick={() => {
-                        // Use the Link component's programmatic navigation to avoid full page refresh
-                        window.history.pushState({}, '', `/calendar?propertyId=${property.id}`);
-                        window.dispatchEvent(new Event('popstate'));
+                        // Navigate to calendar with property filter
+                        setLocation(`/calendar?propertyId=${property.id}`);
                       }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

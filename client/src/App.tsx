@@ -25,6 +25,7 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Calendar} />
+      <ProtectedRoute path="/calendar" component={Calendar} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/inspections" component={Inspections} />
       <ProtectedRoute path="/properties" component={Properties} />
