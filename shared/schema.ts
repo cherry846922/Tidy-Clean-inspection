@@ -341,6 +341,28 @@ export const insertNotificationSchema = createInsertSchema(notifications, {
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
+// Property optimization suggestions schema
+export const optimizationSuggestionSchema = z.object({
+  category: z.string(),
+  title: z.string(),
+  description: z.string(),
+  impact: z.enum(["high", "medium", "low"]),
+  effort: z.enum(["high", "medium", "low"]),
+  costEstimate: z.string(),
+  timeframe: z.string(),
+  benefits: z.array(z.string())
+});
+
+export const optimizationResponseSchema = z.object({
+  propertyId: z.number(),
+  propertyName: z.string(),
+  summary: z.string(),
+  suggestions: z.array(optimizationSuggestionSchema)
+});
+
+export type OptimizationSuggestion = z.infer<typeof optimizationSuggestionSchema>;
+export type OptimizationResponse = z.infer<typeof optimizationResponseSchema>;
+
 export type FeedbackSuggestion = z.infer<typeof feedbackSuggestionSchema>;
 export type FeedbackResponse = z.infer<typeof feedbackResponseSchema>;
 
