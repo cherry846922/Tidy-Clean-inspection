@@ -559,5 +559,72 @@ export const storage = {
         eq(schema.users.isActive, true)
       )
     });
+  },
+
+  // Notification Preferences
+  async getNotificationPreferences(userId: number) {
+    const prefs = await db.query.notificationPreferences.findFirst({
+      where: eq(schema.notificationPreferences.userId, userId)
+    });
+    
+    // If no preferences exist yet, create default preferences
+    if (!prefs) {
+      return this.createDefaultNotificationPreferences(userId);
+    }
+    
+    return prefs;
+  },
+  
+  async createDefaultNotificationPreferences(userId: number) {
+    const defaultPrefs: Omit<schema.InsertNotificationPreferences, "id"> = {
+      userId,
+      emailNotifications: true,
+      pushNotifications: true,
+      inspectionReminders: true,
+      paymentNotifications: true,
+      reportNotifications: true,
+      propertyUpdates: true,
+      marketingNotifications: false,
+      updatedAt: new Date()
+    };
+    
+    const [newPrefs] = await db.insert(schema.notificationPreferences)
+      .values(defaultPrefs)
+      .returning();
+      
+    return newPrefs;
+  },
+  
+  async updateNotificationPreferences(userId: number, preferences: schema.UpdateNotificationPreferences) {
+    // Check if preferences exist first
+    const existingPrefs = await db.query.notificationPreferences.findFirst({
+      where: eq(schema.notificationPreferences.userId, userId)
+    });
+    
+    if (!existingPrefs) {
+      // If no preferences exist yet, create with the provided values
+      const newPrefs = {
+        userId,
+        ...preferences,
+        updatedAt: new Date()
+      };
+      
+      const [createdPrefs] = await db.insert(schema.notificationPreferences)
+        .values(newPrefs)
+        .returning();
+        
+      return createdPrefs;
+    }
+    
+    // Update existing preferences
+    const [updatedPrefs] = await db.update(schema.notificationPreferences)
+      .set({
+        ...preferences,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.notificationPreferences.userId, userId))
+      .returning();
+      
+    return updatedPrefs;
   }
 };
