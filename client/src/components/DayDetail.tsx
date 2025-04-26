@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { formatDate, formatShortDate, getStatusClass } from "@/lib/utils";
+import { formatDate, formatShortDate, getStatusClass, Status } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -111,7 +111,7 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
                       })}
                     </p>
                   </div>
-                  <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
+                  <div className={`${getStatusClass(inspection.status as Status)} text-white text-xs px-2 py-1 rounded-full`}>
                     {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
                         })}
                       </div>
                     </div>
-                    <div className={`${getStatusClass(inspection.status)} text-white text-xs px-2 py-1 rounded-full`}>
+                    <div className={`${getStatusClass(inspection.status as Status)} text-white text-xs px-2 py-1 rounded-full`}>
                       {inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1)}
                     </div>
                   </div>
