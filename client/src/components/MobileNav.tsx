@@ -8,7 +8,7 @@ export default function MobileNav() {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 z-10">
       <Link href="/" 
-        className={`flex flex-col items-center p-2 ${isActive('/') ? 'text-[#FF5A5F]' : 'text-[#767676]'}`}
+        className={`flex flex-col items-center p-2 ${isActive('/') ? 'text-primary' : 'text-[#767676]'}`}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -16,7 +16,7 @@ export default function MobileNav() {
         <span className="text-xs mt-1">Calendar</span>
       </Link>
       <Link href="/inspections" 
-        className={`flex flex-col items-center p-2 ${isActive('/inspections') ? 'text-[#FF5A5F]' : 'text-[#767676]'}`}
+        className={`flex flex-col items-center p-2 ${isActive('/inspections') ? 'text-primary' : 'text-[#767676]'}`}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

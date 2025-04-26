@@ -60,13 +60,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className={`sidebar bg-white shadow-lg md:w-64 fixed md:sticky top-0 h-screen z-50 md:z-0 md:flex flex-col transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} border-r border-gray-200`}>
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-[#FF5A5F] flex items-center">
+            <h1 className="text-2xl font-bold gradient-text-primary flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              CleanBnB
+              Tidy Clean
             </h1>
-            <p className="text-[#767676] text-sm mt-1">Inspection Scheduler</p>
+            <p className="text-[#767676] text-sm mt-1">Inspector</p>
           </div>
           <button 
             className="md:hidden text-gray-500 hover:text-gray-700"

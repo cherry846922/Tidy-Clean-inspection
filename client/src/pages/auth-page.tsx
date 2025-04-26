@@ -100,7 +100,7 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-4 md:p-8 gradient-bg-soft">
         <Card className="w-full max-w-md border shadow-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold text-center gradient-text-primary">CleanBnB</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center gradient-text-primary">Tidy Clean Inspector</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
@@ -284,7 +284,7 @@ export default function AuthPage() {
       {/* Right side: Hero section */}
       <div className="flex-1 gradient-bg-primary p-8 hidden md:flex flex-col justify-center">
         <div className="max-w-lg mx-auto text-white">
-          <h1 className="text-4xl font-bold mb-4">Airbnb Inspection Management</h1>
+          <h1 className="text-4xl font-bold mb-4">Tidy Clean Inspector</h1>
           <p className="text-xl mb-6">
             Schedule, manage and pay for property inspections in one simple platform.
           </p>
