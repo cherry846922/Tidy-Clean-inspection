@@ -56,7 +56,10 @@ export default function CalendarView({ selectedDate, onDateChange, propertyFilte
   };
 
   const handleDayClick = (date: Date) => {
-    onDateChange(date);
+    // Create a new date to avoid reference issues
+    const newDate = new Date(date.getTime());
+    console.log("Calendar day clicked:", newDate.toISOString());
+    onDateChange(newDate);
   };
 
   // Group inspections by date

@@ -524,7 +524,9 @@ export default function Properties() {
                       size="sm" 
                       className="text-[#FF5A5F]"
                       onClick={() => {
-                        window.location.href = `/calendar?propertyId=${property.id}`;
+                        // Use the Link component's programmatic navigation to avoid full page refresh
+                        window.history.pushState({}, '', `/calendar?propertyId=${property.id}`);
+                        window.dispatchEvent(new Event('popstate'));
                       }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -17,11 +17,22 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
   const [upcomingInspections, setUpcomingInspections] = useState<Inspection[]>([]);
   
   // Get inspections for the selected date
+  // Format the date properly for the API
+  const formattedDate = selectedDate.toISOString().split('T')[0];
+  
   const { data: inspectionsForDay, isLoading: isLoadingDay, refetch: refetchDay } = useQuery<Inspection[]>({
     queryKey: [
       '/api/inspections/byDate',
-      { date: selectedDate.toISOString().split('T')[0] }
+      { date: formattedDate }
     ],
+    // Ensure date parameter is passed in the URL
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/inspections/byDate?date=${formattedDate}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch inspections for the selected date');
+      }
+      return res.json();
+    }
   });
   
   // Get upcoming inspections for the week
@@ -41,7 +52,7 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
     }
   }, [upcomingData, selectedDate]);
   
-  const handleStatusChange = async (inspectionId: number, newStatus: string) => {
+  const handleStatusChange = async (inspectionId: number, newStatus: 'scheduled' | 'completed' | 'cancelled') => {
     try {
       await apiRequest('PATCH', `/api/inspections/${inspectionId}/status`, { status: newStatus });
       await refetchDay();
@@ -170,7 +181,10 @@ export default function DayDetail({ selectedDate, onInspectionAction }: DayDetai
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => document.getElementById('new-inspection-modal')?.classList.remove('hidden')}
+              onClick={() => {
+                // Pass the event up to the parent component to open the modal
+                onInspectionAction();
+              }}
             >
               Schedule an Inspection
             </Button>

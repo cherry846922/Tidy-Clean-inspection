@@ -40,7 +40,8 @@ export default function Calendar() {
   }, [filters.propertyId]);
   
   const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
+    console.log("Date changed in Calendar page:", date.toISOString());
+    setSelectedDate(new Date(date.getTime()));
   };
   
   const handleFilterChange = (newFilters: FilterValues) => {
@@ -85,7 +86,8 @@ export default function Calendar() {
           <DayDetail 
             selectedDate={selectedDate} 
             onInspectionAction={() => {
-              // Refetch the calendar data when inspection status changes
+              // Open the new inspection modal when requested from DayDetail
+              setIsNewInspectionModalOpen(true);
             }} 
           />
         </div>
