@@ -291,9 +291,8 @@ export default function Dashboard() {
               {/* Main Dashboard Content */}
               <div className="lg:col-span-2">
                 <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-2 lg:w-[400px]">
+                  <TabsList className="grid grid-cols-1 lg:w-[200px]">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="properties">Properties</TabsTrigger>
                   </TabsList>
                   
                   {/* Overview Tab */}
@@ -424,66 +423,7 @@ export default function Dashboard() {
                     ) : null}
                   </TabsContent>
                   
-                  {/* Properties Tab */}
-                  <TabsContent value="properties" className="space-y-6">
-                    {isLoading ? (
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {[...Array(6)].map((_, i) => (
-                          <Card key={i}>
-                            <CardHeader>
-                              <Skeleton className="h-5 w-2/3" />
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <Skeleton className="h-4 w-full" />
-                                <Skeleton className="h-4 w-full" />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : data && data.propertyPerformance.length > 0 ? (
-                      <>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {data.propertyPerformance.map((property) => (
-                            <PropertyPerformanceCard key={property.id} property={property} />
-                          ))}
-                        </div>
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg">Properties Health Score Comparison</CardTitle>
-                            <CardDescription>Compare performance across your properties</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <ResponsiveContainer width="100%" height={300}>
-                              <BarChart
-                                data={data.propertyPerformance}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="healthScore" name="Health Score" fill="#8884d8" />
-                                <Bar dataKey="completionRate" name="Completion Rate" fill="#82ca9d" />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </CardContent>
-                        </Card>
-                      </>
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Home className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                        <p>No properties found</p>
-                        <Button variant="outline" className="mt-4">
-                          Add Property
-                        </Button>
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  {/* Inspections Tab */}
+
 
                 </Tabs>
               </div>
@@ -511,9 +451,8 @@ export default function Dashboard() {
             // Inspector Layout - full width, no journey tracker
             <div className="mb-8">
               <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-2 md:grid-cols-2 lg:w-[400px]">
+                <TabsList className="grid grid-cols-1 md:grid-cols-1 lg:w-[200px]">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="properties">Properties</TabsTrigger>
                 </TabsList>
                 
                 {/* Content is the same as in host view but spans full width */}
@@ -644,61 +583,7 @@ export default function Dashboard() {
                   ) : null}
                 </TabsContent>
                 
-                {/* Properties Tab - same as host view */}
-                <TabsContent value="properties" className="space-y-6">
-                  {isLoading ? (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {[...Array(6)].map((_, i) => (
-                        <Card key={i}>
-                          <CardHeader>
-                            <Skeleton className="h-5 w-2/3" />
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              <Skeleton className="h-4 w-full" />
-                              <Skeleton className="h-4 w-full" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : data && data.propertyPerformance.length > 0 ? (
-                    <>
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {data.propertyPerformance.map((property) => (
-                          <PropertyPerformanceCard key={property.id} property={property} />
-                        ))}
-                      </div>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Properties Health Score Comparison</CardTitle>
-                          <CardDescription>Compare performance across properties</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart
-                              data={data.propertyPerformance}
-                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
-                              <YAxis />
-                              <Tooltip />
-                              <Legend />
-                              <Bar dataKey="healthScore" name="Health Score" fill="#8884d8" />
-                              <Bar dataKey="completionRate" name="Completion Rate" fill="#82ca9d" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    </>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Home className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No properties found</p>
-                    </div>
-                  )}
-                </TabsContent>
+
               </Tabs>
             </div>
           )}
