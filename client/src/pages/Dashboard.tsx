@@ -484,81 +484,7 @@ export default function Dashboard() {
                   </TabsContent>
                   
                   {/* Inspections Tab */}
-                  <TabsContent value="inspections" className="space-y-6">
-                    {isLoading ? (
-                      <div className="space-y-4">
-                        <Skeleton className="h-[300px] w-full" />
-                        <Skeleton className="h-[200px] w-full" />
-                      </div>
-                    ) : data ? (
-                      <>
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <Card className="bg-green-50">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="text-2xl font-bold text-green-600">{data.summary.completedInspections}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {data.summary.totalInspections > 0 
-                                  ? `${Math.round((data.summary.completedInspections / data.summary.totalInspections) * 100)}% of total` 
-                                  : 'No inspections yet'}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          <Card className="bg-blue-50">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="text-2xl font-bold text-blue-600">{data.summary.scheduledInspections}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {data.summary.totalInspections > 0 
-                                  ? `${Math.round((data.summary.scheduledInspections / data.summary.totalInspections) * 100)}% of total` 
-                                  : 'No inspections yet'}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          <Card className="bg-orange-50">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="text-2xl font-bold text-orange-600">{data.summary.cancelledInspections}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {data.summary.totalInspections > 0 
-                                  ? `${Math.round((data.summary.cancelledInspections / data.summary.totalInspections) * 100)}% of total` 
-                                  : 'No inspections yet'}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg">Monthly Inspection Trends</CardTitle>
-                            <CardDescription>Track your inspection patterns over time</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <ResponsiveContainer width="100%" height={300}>
-                              <LineChart
-                                data={data.monthlyData}
-                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="label" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Line type="monotone" dataKey="completed" name="Completed" stroke="#00C49F" />
-                                <Line type="monotone" dataKey="scheduled" name="Scheduled" stroke="#0088FE" />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </CardContent>
-                        </Card>
-                      </>
-                    ) : null}
-                  </TabsContent>
+
                 </Tabs>
               </div>
               
@@ -585,10 +511,9 @@ export default function Dashboard() {
             // Inspector Layout - full width, no journey tracker
             <div className="mb-8">
               <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-3 md:grid-cols-3 lg:w-[400px]">
+                <TabsList className="grid grid-cols-2 md:grid-cols-2 lg:w-[400px]">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="properties">Properties</TabsTrigger>
-                  <TabsTrigger value="inspections">Inspections</TabsTrigger>
                 </TabsList>
                 
                 {/* Content is the same as in host view but spans full width */}
@@ -721,14 +646,58 @@ export default function Dashboard() {
                 
                 {/* Properties Tab - same as host view */}
                 <TabsContent value="properties" className="space-y-6">
-                  {/* Properties content same as before */}
-                  {/* ... */}
-                </TabsContent>
-                
-                {/* Inspections Tab - same as host view */}
-                <TabsContent value="inspections" className="space-y-6">
-                  {/* Inspections content same as before */}
-                  {/* ... */}
+                  {isLoading ? (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {[...Array(6)].map((_, i) => (
+                        <Card key={i}>
+                          <CardHeader>
+                            <Skeleton className="h-5 w-2/3" />
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-full" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : data && data.propertyPerformance.length > 0 ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {data.propertyPerformance.map((property) => (
+                          <PropertyPerformanceCard key={property.id} property={property} />
+                        ))}
+                      </div>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Properties Health Score Comparison</CardTitle>
+                          <CardDescription>Compare performance across properties</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart
+                              data={data.propertyPerformance}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="name" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Bar dataKey="healthScore" name="Health Score" fill="#8884d8" />
+                              <Bar dataKey="completionRate" name="Completion Rate" fill="#82ca9d" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Home className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No properties found</p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
