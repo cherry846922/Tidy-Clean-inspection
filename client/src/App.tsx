@@ -46,7 +46,9 @@ function Router() {
       <ProtectedRoute path="/calendar" component={renderWithAnimation(Calendar)} />
       <ProtectedRoute path="/dashboard" component={renderWithAnimation(Dashboard)} />
       <ProtectedRoute path="/inspections" component={renderWithAnimation(Inspections)} />
-      <ProtectedRoute path="/properties" component={renderWithAnimation(Properties)} />
+      <Route path="/properties">
+        {() => <Redirect to="/inspections" />}
+      </Route>
       <ProtectedRoute path="/price/:id" component={renderWithAnimation(PricePage)} />
       <ProtectedRoute path="/checkout/:id" component={renderWithAnimation(Checkout)} />
       <ProtectedRoute path="/products" component={renderWithAnimation(Products)} />
