@@ -18,7 +18,7 @@ import PropertyOptimization from "@/pages/PropertyOptimization";
 import AnimationDemo from "@/pages/AnimationDemo";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AnimationProvider } from "@/contexts/animation-context";
@@ -47,7 +47,14 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={renderWithAnimation(Dashboard)} />
       <ProtectedRoute path="/inspections" component={renderWithAnimation(Inspections)} />
       <Route path="/properties">
-        {() => <Redirect to="/inspections" />}
+        {() => {
+          // This provides a proper redirect with wouter
+          const [, navigate] = useLocation();
+          useEffect(() => {
+            navigate("/inspections");
+          }, [navigate]);
+          return null;
+        }}
       </Route>
       <ProtectedRoute path="/price/:id" component={renderWithAnimation(PricePage)} />
       <ProtectedRoute path="/checkout/:id" component={renderWithAnimation(Checkout)} />
