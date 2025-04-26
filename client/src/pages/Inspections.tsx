@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Home } from "lucide-react";
 import type { Inspection, Property } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Inspections() {
   const [isNewInspectionModalOpen, setIsNewInspectionModalOpen] = useState(false);
@@ -19,6 +20,9 @@ export default function Inspections() {
   });
   
   const [activeTab, setActiveTab] = useState("upcoming");
+  const { user } = useAuth();
+  const isInspector = user?.role === "inspector";
+  const isHost = user?.role === "host";
   
   const { data: inspections, isLoading } = useQuery<Inspection[]>({
     queryKey: [
@@ -61,11 +65,14 @@ export default function Inspections() {
         {/* Filter Bar */}
         <FilterBar onFilterChange={handleFilterChange} />
         
-        {/* Main Tabs - Properties and Inspections */}
+        {/* Main Tabs - Properties and Inspections (Host only gets both tabs) */}
         <Tabs defaultValue="inspections" className="mt-6">
           <TabsList className="mb-4">
             <TabsTrigger value="inspections">Inspections</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
+            {/* Properties tab only visible to hosts */}
+            {isHost && (
+              <TabsTrigger value="properties">Properties</TabsTrigger>
+            )}
           </TabsList>
           
           {/* Inspections Tab Content */}
@@ -177,15 +184,17 @@ export default function Inspections() {
             </Tabs>
           </TabsContent>
           
-          {/* Properties Tab Content */}
-          <TabsContent value="properties">
-            <div className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Property Cards will be dynamically loaded here */}
-                <PropertyList />
+          {/* Properties Tab Content - Only visible to hosts */}
+          {isHost && (
+            <TabsContent value="properties">
+              <div className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Property Cards will be dynamically loaded here */}
+                  <PropertyList />
+                </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          )}
         </Tabs>
         
         {/* New Inspection Modal */}
