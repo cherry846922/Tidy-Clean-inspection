@@ -499,5 +499,65 @@ export const storage = {
       .where(eq(schema.checklistItems.id, id));
       
     return { success: true };
+  },
+
+  // ===== Notifications =====
+  async createNotification(data: schema.InsertNotification) {
+    const [notification] = await db.insert(schema.notifications)
+      .values(data)
+      .returning();
+    
+    return notification;
+  },
+
+  async getUserNotifications(userId: number, limit = 50) {
+    return db.query.notifications.findMany({
+      where: eq(schema.notifications.userId, userId),
+      orderBy: [desc(schema.notifications.createdAt)],
+      limit
+    });
+  },
+
+  async getUnreadNotificationCount(userId: number) {
+    const unreadNotifications = await db.query.notifications.findMany({
+      where: and(
+        eq(schema.notifications.userId, userId),
+        eq(schema.notifications.isRead, false)
+      ),
+      columns: {
+        id: true
+      }
+    });
+    
+    return unreadNotifications.length;
+  },
+
+  async markNotificationAsRead(id: number) {
+    const [updatedNotification] = await db.update(schema.notifications)
+      .set({ isRead: true })
+      .where(eq(schema.notifications.id, id))
+      .returning();
+    
+    return updatedNotification;
+  },
+
+  async markAllNotificationsAsRead(userId: number) {
+    await db.update(schema.notifications)
+      .set({ isRead: true })
+      .where(and(
+        eq(schema.notifications.userId, userId),
+        eq(schema.notifications.isRead, false)
+      ));
+    
+    return { success: true };
+  },
+
+  async getUsersByRole(role: string) {
+    return db.query.users.findMany({
+      where: and(
+        eq(schema.users.role, role),
+        eq(schema.users.isActive, true)
+      )
+    });
   }
 };

@@ -51,10 +51,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post(`${apiPrefix}/properties`, async (req, res) => {
+  app.post(`${apiPrefix}/properties`, requireAuth, async (req, res) => {
     try {
       const validatedData = schema.insertPropertySchema.parse(req.body);
       const newProperty = await storage.insertProperty(validatedData);
+      
+      // Send notification to all inspectors about the new property
+      try {
+        const inspectors = await storage.getUsersByRole('inspector');
+        
+        // Create notifications for each inspector
+        for (const inspector of inspectors) {
+          await storage.createNotification({
+            userId: inspector.id,
+            title: "New Property Added",
+            message: `A new property "${newProperty.name}" has been added by ${req.user?.username || 'a host'}.`,
+            type: "property_added",
+            relatedId: newProperty.id,
+            relatedType: "property"
+          });
+        }
+      } catch (notificationError) {
+        console.error("Failed to send property addition notifications:", notificationError);
+        // Continue with the response even if notification fails
+      }
+      
       res.status(201).json(newProperty);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -243,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch(`${apiPrefix}/inspections/:id/status`, async (req, res) => {
+  app.patch(`${apiPrefix}/inspections/:id/status`, requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -253,10 +274,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the status update
       const validatedData = schema.updateInspectionStatusSchema.parse(req.body);
       
+      // Get the inspection before update to get the property owner details
+      const oldInspection = await storage.getInspectionById(id);
+      if (!oldInspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      
       // Update the inspection status
       const updatedInspection = await storage.updateInspectionStatus(id, validatedData);
       if (!updatedInspection) {
         return res.status(404).json({ message: "Inspection not found" });
+      }
+      
+      // If the status has been changed to "completed", send notification to hosts
+      if (validatedData.status === 'completed' && oldInspection.status !== 'completed') {
+        try {
+          // Get all hosts
+          const hosts = await storage.getUsersByRole('host');
+          
+          for (const host of hosts) {
+            await storage.createNotification({
+              userId: host.id,
+              title: "Inspection Completed",
+              message: `Inspection for ${updatedInspection.property.name} has been completed. Please review and make payment.`,
+              type: "payment_required",
+              relatedId: updatedInspection.id,
+              relatedType: "inspection"
+            });
+          }
+        } catch (notificationError) {
+          console.error("Failed to send inspection completion notifications:", notificationError);
+          // Continue with the response even if notification fails
+        }
       }
       
       res.json(updatedInspection);
